@@ -5,12 +5,10 @@ import LoginForm from './components/auth/LoginForm';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './components/dashboard/Dashboard';
 import CustomersModule from './components/customers/CustomersModule';
-
-// Policy components
 import PoliciesPage from './components/policies/PoliciesPage';
 import NewPolicyPage from './components/policies/NewPolicyPage';
 
-export default function Home() {
+export default function HomePage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentModule, setCurrentModule] = useState('dashboard');
 
@@ -74,26 +72,29 @@ export default function Home() {
   );
 }
 
-// Quick Module Components
+// Module Components
 function ClaimsModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Claims Management</h2>
-        <p className="text-gray-600">Claims management module coming soon...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Total Claims</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">387</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Pending Claims</h3>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">23</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Settled Claims</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">364</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Claims Management</h1>
+        <p className="text-gray-600 mt-1">Process and manage insurance claims</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Total Claims</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">387</p>
+          <p className="text-sm text-gray-500 mt-1">+12% from last month</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Pending Claims</h3>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">23</p>
+          <p className="text-sm text-gray-500 mt-1">Requires attention</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Settled Claims</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">364</p>
+          <p className="text-sm text-gray-500 mt-1">94% resolution rate</p>
         </div>
       </div>
     </div>
@@ -103,22 +104,25 @@ function ClaimsModule() {
 function UnderwritingModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Underwriting</h2>
-        <p className="text-gray-600">Risk assessment and underwriting module...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Applications</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">45</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Approved</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">38</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Under Review</h3>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">7</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Underwriting</h1>
+        <p className="text-gray-600 mt-1">Risk assessment and policy approval</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Applications</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">45</p>
+          <p className="text-sm text-gray-500 mt-1">This month</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Approved</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">38</p>
+          <p className="text-sm text-gray-500 mt-1">84% approval rate</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Under Review</h3>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">7</p>
+          <p className="text-sm text-gray-500 mt-1">Pending review</p>
         </div>
       </div>
     </div>
@@ -128,22 +132,25 @@ function UnderwritingModule() {
 function BillingModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Billing & Payments</h2>
-        <p className="text-gray-600">Premium billing and payment processing...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">$2.4M</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Outstanding</h3>
-            <p className="text-3xl font-bold text-red-600 mt-2">$156K</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Collection Rate</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">94%</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Billing & Payments</h1>
+        <p className="text-gray-600 mt-1">Premium billing and payment processing</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Monthly Revenue</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">$2.4M</p>
+          <p className="text-sm text-gray-500 mt-1">+18% from last month</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Outstanding</h3>
+          <p className="text-3xl font-bold text-red-600 mt-2">$156K</p>
+          <p className="text-sm text-gray-500 mt-1">Overdue payments</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Collection Rate</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">94%</p>
+          <p className="text-sm text-gray-500 mt-1">Industry leading</p>
         </div>
       </div>
     </div>
@@ -153,22 +160,25 @@ function BillingModule() {
 function CommissionModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Commission Management</h2>
-        <p className="text-gray-600">Agent commission tracking and payouts...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Total Commissions</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">$234K</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Pending Payouts</h3>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">$45K</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibant text-gray-900">Active Agents</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">28</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Commission Management</h1>
+        <p className="text-gray-600 mt-1">Agent commission tracking and payouts</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Total Commissions</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">$234K</p>
+          <p className="text-sm text-gray-500 mt-1">This quarter</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Pending Payouts</h3>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">$45K</p>
+          <p className="text-sm text-gray-500 mt-1">Due this month</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Active Agents</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">28</p>
+          <p className="text-sm text-gray-500 mt-1">Licensed agents</p>
         </div>
       </div>
     </div>
@@ -178,22 +188,25 @@ function CommissionModule() {
 function ProductsModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Product Management</h2>
-        <p className="text-gray-600">Insurance products and plan configuration...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Active Products</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">12</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Plans</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">47</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Coverage Types</h3>
-            <p className="text-3xl font-bold text-purple-600 mt-2">156</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Product Management</h1>
+        <p className="text-gray-600 mt-1">Insurance products and plan configuration</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Active Products</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">12</p>
+          <p className="text-sm text-gray-500 mt-1">Available products</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Plans</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">47</p>
+          <p className="text-sm text-gray-500 mt-1">Coverage plans</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Coverage Types</h3>
+          <p className="text-3xl font-bold text-purple-600 mt-2">156</p>
+          <p className="text-sm text-gray-500 mt-1">Coverage options</p>
         </div>
       </div>
     </div>
@@ -203,22 +216,25 @@ function ProductsModule() {
 function DocumentsModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Document Management</h2>
-        <p className="text-gray-600">Policy documents, certificates, and file storage...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Total Documents</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">8,453</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Storage Used</h3>
-            <p className="text-3xl font-bold text-yellow-600 mt-2">2.4 GB</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Categories</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">15</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Document Management</h1>
+        <p className="text-gray-600 mt-1">Policy documents, certificates, and file storage</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Total Documents</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">8,453</p>
+          <p className="text-sm text-gray-500 mt-1">Stored documents</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Storage Used</h3>
+          <p className="text-3xl font-bold text-yellow-600 mt-2">2.4 GB</p>
+          <p className="text-sm text-gray-500 mt-1">Cloud storage</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Categories</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">15</p>
+          <p className="text-sm text-gray-500 mt-1">Document types</p>
         </div>
       </div>
     </div>
@@ -228,22 +244,25 @@ function DocumentsModule() {
 function FinanceModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Finance Integration</h2>
-        <p className="text-gray-600">Accounting system integration and financial reports...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">GL Entries</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">1,247</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Reconciled</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">98%</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Outstanding</h3>
-            <p className="text-3xl font-bold text-red-600 mt-2">$12K</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Finance Integration</h1>
+        <p className="text-gray-600 mt-1">Accounting system integration and financial reports</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">GL Entries</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">1,247</p>
+          <p className="text-sm text-gray-500 mt-1">This period</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Reconciled</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">98%</p>
+          <p className="text-sm text-gray-500 mt-1">Reconciliation rate</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Outstanding</h3>
+          <p className="text-3xl font-bold text-red-600 mt-2">$12K</p>
+          <p className="text-sm text-gray-500 mt-1">Unreconciled</p>
         </div>
       </div>
     </div>
@@ -253,22 +272,25 @@ function FinanceModule() {
 function ReportsModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">Reports & Business Intelligence</h2>
-        <p className="text-gray-600">Analytics, reports, and business insights...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Standard Reports</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">24</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Custom Reports</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">8</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Dashboards</h3>
-            <p className="text-3xl font-bold text-purple-600 mt-2">6</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Reports & Business Intelligence</h1>
+        <p className="text-gray-600 mt-1">Analytics, reports, and business insights</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Standard Reports</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">24</p>
+          <p className="text-sm text-gray-500 mt-1">Pre-built reports</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Custom Reports</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">8</p>
+          <p className="text-sm text-gray-500 mt-1">User-created</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Dashboards</h3>
+          <p className="text-3xl font-bold text-purple-600 mt-2">6</p>
+          <p className="text-sm text-gray-500 mt-1">Interactive dashboards</p>
         </div>
       </div>
     </div>
@@ -278,22 +300,25 @@ function ReportsModule() {
 function SettingsModule() {
   return (
     <div className="p-6">
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">System Settings</h2>
-        <p className="text-gray-600">Application configuration and user management...</p>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">Active Users</h3>
-            <p className="text-3xl font-bold text-blue-600 mt-2">47</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">User Roles</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">8</p>
-          </div>
-          <div className="stat-card">
-            <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
-            <p className="text-3xl font-bold text-green-600 mt-2">99%</p>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">System Settings</h1>
+        <p className="text-gray-600 mt-1">Application configuration and user management</p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">Active Users</h3>
+          <p className="text-3xl font-bold text-blue-600 mt-2">47</p>
+          <p className="text-sm text-gray-500 mt-1">System users</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">User Roles</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">8</p>
+          <p className="text-sm text-gray-500 mt-1">Permission roles</p>
+        </div>
+        <div className="stat-card">
+          <h3 className="text-lg font-semibold text-gray-900">System Health</h3>
+          <p className="text-3xl font-bold text-green-600 mt-2">99%</p>
+          <p className="text-sm text-gray-500 mt-1">Uptime</p>
         </div>
       </div>
     </div>
