@@ -21,7 +21,6 @@ import {
   Clock,
   XCircle
 } from 'lucide-react';
-import DashboardLayout from '../dashboard/layout';
 
 interface Policy {
   id: string;
@@ -240,9 +239,9 @@ export default function PoliciesPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Policy Management</h1>
@@ -259,7 +258,9 @@ export default function PoliciesPage() {
             </button>
           </div>
         </div>
+      </div>
 
+      <div className="p-6 space-y-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
           <div className="stat-card">
@@ -546,6 +547,6 @@ export default function PoliciesPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
