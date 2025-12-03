@@ -1,8 +1,19 @@
-### **🔧 Backend Tech Stack**
-**Framework:** Node.js + Express + TypeScript
-**Database:** PostgreSQL with Prisma ORM
-**Authentication:** JWT with role-based access
-**File Storage:** AWS S3 (or local for development)
-**Validation:** Zod for type-safe validation
+'use client';
 
-### **🏗️ Project Structure**
+import { useState } from 'react';
+import LoginForm from './auth/LoginForm';
+import DashboardLayout from '../dashboard/layout';
+
+export default function Component() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
+  return <DashboardLayout />;
+}

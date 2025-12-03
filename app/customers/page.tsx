@@ -13,9 +13,10 @@ import {
   MapPin,
   Edit,
   Eye,
-  Trash2
+  Trash2,
+  ArrowLeft
 } from 'lucide-react';
-import DashboardLayout from '../dashboard/layout';
+import { useRouter } from 'next/navigation';
 
 interface Customer {
   id: string;
@@ -100,6 +101,7 @@ const mockCustomers: Customer[] = [
 ];
 
 export default function CustomersPage() {
+  const router = useRouter();
   const [customers] = useState<Customer[]>(mockCustomers);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'All' | 'Individual' | 'Corporate'>('All');
@@ -129,24 +131,36 @@ export default function CustomersPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center space-x-4">
+          <button 
+            onClick={() => router.push('/')}
+            className="p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <ArrowLeft className="h-5 w-5 text-gray-600" />
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
             <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
           </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Action Bar */}
+        <div className="flex items-center justify-between">
           <div className="flex space-x-3">
             <button className="btn-secondary">
               <Download className="h-4 w-4 mr-2" />
               Export
             </button>
-            <button className="btn-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Customer
-            </button>
           </div>
+          <button className="btn-primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Customer
+          </button>
         </div>
 
         {/* Stats Cards */}
@@ -155,7 +169,7 @@ export default function CustomersPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length.toLocaleString()}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length}</p>
               </div>
               <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-blue-600" />
@@ -243,12 +257,10 @@ export default function CustomersPage() {
               </select>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <button className="btn-secondary">
-                <Filter className="h-4 w-4 mr-2" />
-                More Filters
-              </button>
-            </div>
+            <button className="btn-secondary">
+              <Filter className="h-4 w-4 mr-2" />
+              More Filters
+            </button>
           </div>
         </div>
 
@@ -371,6 +383,6 @@ export default function CustomersPage() {
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

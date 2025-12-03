@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { 
   Users, 
   FileText, 
@@ -138,7 +137,6 @@ const navigation = [
 ];
 
 export default function Sidebar({ currentPath }: SidebarProps) {
-  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -151,7 +149,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
   };
 
   const handleNavigation = (href: string) => {
-    router.push(href);
+    window.location.href = href;
     setSidebarOpen(false);
   };
 
