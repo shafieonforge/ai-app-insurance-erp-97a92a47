@@ -7,8 +7,12 @@ import DashboardLayout from './dashboard/layout';
 export default function Home() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
+  const handleLogin = () => {
+    setIsAuthenticated(true);
+  };
+
   if (!isAuthenticated) {
-    return <LoginForm />;
+    return <LoginForm onLogin={handleLogin} />;
   }
 
   return <DashboardLayout />;

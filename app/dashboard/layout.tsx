@@ -1,11 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Bell, Search, User, LogOut, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Search, User } from 'lucide-react';
 import Sidebar from '../components/layout/Sidebar';
-import Dashboard from './page';
 
-export default function DashboardLayout() {
+interface DashboardLayoutProps {
+  children?: React.ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const [currentPath] = useState('/dashboard');
 
   return (
@@ -47,8 +50,6 @@ export default function DashboardLayout() {
                     <div className="text-xs text-gray-500">Administrator</div>
                   </div>
                 </button>
-                
-                {/* Dropdown menu would go here */}
               </div>
             </div>
           </div>
@@ -56,9 +57,16 @@ export default function DashboardLayout() {
         
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto">
-          <Dashboard />
+          {children || <DefaultDashboard />}
         </main>
       </div>
     </div>
   );
+}
+
+// Import the dashboard component
+import Dashboard from './page';
+
+function DefaultDashboard() {
+  return <Dashboard />;
 }

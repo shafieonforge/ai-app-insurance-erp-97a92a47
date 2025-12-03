@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { 
   Users, 
   FileText, 
@@ -27,7 +28,7 @@ interface SidebarProps {
 const navigation = [
   {
     name: 'Dashboard',
-    href: '/dashboard',
+    href: '/',
     icon: BarChart3,
     current: false,
   },
@@ -137,6 +138,7 @@ const navigation = [
 ];
 
 export default function Sidebar({ currentPath }: SidebarProps) {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
@@ -146,6 +148,11 @@ export default function Sidebar({ currentPath }: SidebarProps) {
         ? prev.filter(item => item !== name)
         : [...prev, name]
     );
+  };
+
+  const handleNavigation = (href: string) => {
+    router.push(href);
+    setSidebarOpen(false);
   };
 
   const isCurrentPath = (href: string) => currentPath === href;
@@ -181,7 +188,13 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                       ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   }`}
-                  onClick={() => item.children ? toggleExpanded(item.name) : null}
+                  onClick={() => {
+                    if (item.children) {
+                      toggleExpanded(item.name);
+                    } else {
+                      handleNavigation(item.href);
+                    }
+                  }}
                 >
                   <div className="flex items-center">
                     <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -197,17 +210,17 @@ export default function Sidebar({ currentPath }: SidebarProps) {
                 {item.children && isExpanded && (
                   <div className="mt-1 ml-8 space-y-1">
                     {item.children.map((child) => (
-                      <a
+                      <button
                         key={child.href}
-                        href={child.href}
-                        className={`block px-3 py-2 text-sm rounded-md transition-colors ${
+                        onClick={() => handleNavigation(child.href)}
+                        className={`block w-full text-left px-3 py-2 text-sm rounded-md transition-colors ${
                           isCurrentPath(child.href)
                             ? 'text-blue-700 bg-blue-50 font-medium'
                             : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                       >
                         {child.name}
-                      </a>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -219,9 +232,9 @@ export default function Sidebar({ currentPath }: SidebarProps) {
 
       {/* Settings */}
       <div className="px-4 py-4 border-t border-gray-200">
-        <a
-          href="/settings"
-          className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
+        <button
+          onClick={() => handleNavigation('/settings')}
+          className={`w-full group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
             isCurrentPath('/settings')
               ? 'bg-blue-50 text-blue-700'
               : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
@@ -229,7 +242,7 @@ export default function Sidebar({ currentPath }: SidebarProps) {
         >
           <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
           Settings
-        </a>
+        </button>
       </div>
     </div>
   );
