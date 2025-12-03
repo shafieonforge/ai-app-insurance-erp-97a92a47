@@ -1,60 +1,90 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
-export interface AuthRequest extends Request {
+export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
     role: string;
+    permissions: string[];
   };
 }
 
-export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const token = req.header('Authorization')?.replace('Bearer ', '');
+    // Get token from header or cookie
+    const token = req.header('Authorization')?.replace('Bearer ', '') || req.cookies?.['auth-token'];
 
     if (!token) {
       return res.status(401).json({
-        success: false,
-        error: 'Access denied. No token provided.'
+        error: 'Authentication required',
+        message: 'No token provided'
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'insurecore-secret-key') as any;
     
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.id },
-      select: { id: true, email: true, role: true, isActive: true }
-    });
+    // Attach user to request
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+      role: decoded.role,
+      permissions: decoded.permissions
+    };
 
-    if (!user || !user.isActive) {
-      return res.status(401).json({
-        success: false,
-        error: 'Invalid token or user not active.'
-      });
-    }
-
-    req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({
-      success: false,
-      error: 'Invalid token.'
+    if (error instanceof jwt.JsonWebTokenError) {
+      return res.status(401).json({
+        error: 'Authentication failed',
+        message: 'Invalid or expired token'
+      });
+    }
+
+    return res.status(500).json({
+      error: 'Server error',
+      message: 'Authentication verification failed'
     });
   }
 };
 
-export const requireRole = (roles: string[]) => {
-  return (req: AuthRequest, res: Response, next: NextFunction) => {
-    if (!req.user || !roles.includes(req.user.role)) {
-      return res.status(403).json({
-        success: false,
-        error: 'Insufficient permissions.'
+export const requirePermission = (permission: string) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'User not authenticated'
       });
     }
-    next();
+
+    if (req.user.permissions.includes('all') || req.user.permissions.includes(permission)) {
+      return next();
+    }
+
+    return res.status(403).json({
+      error: 'Insufficient permissions',
+      message: `Permission '${permission}' required`
+    });
+  };
+};
+
+export const requireRole = (role: string) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'User not authenticated'
+      });
+    }
+
+    if (req.user.role === role || req.user.role === 'admin') {
+      return next();
+    }
+
+    return res.status(403).json({
+      error: 'Insufficient role',
+      message: `Role '${role}' required`
+    });
   };
 };

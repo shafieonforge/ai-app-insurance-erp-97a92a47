@@ -1,56 +1,53 @@
 import { Request, Response, NextFunction } from 'express';
+import { z } from 'zod';
 import { CustomerService } from '../services/customer.service';
-import { CustomerType, CustomerStatus, ContactType, AddressType } from '@prisma/client';
+import { customerSchema, customerFiltersSchema } from '../schemas/customer.schema';
+
+const customerService = new CustomerService();
 
 export class CustomerController {
-  private customerService = new CustomerService();
-
-  getCustomers = async (req: Request, res: Response, next: NextFunction) => {
+  async getCustomers(req: Request, res: Response, next: NextFunction) {
     try {
-      const {
-        page = 1,
-        limit = 10,
-        search,
-        type,
-        status,
-        sortBy = 'createdAt',
-        sortOrder = 'desc'
-      } = req.query;
-
-      const result = await this.customerService.getCustomers({
-        page: Number(page),
-        limit: Number(limit),
-        search: search as string,
-        type: type as CustomerType,
-        status: status as CustomerStatus,
-        sortBy: sortBy as string,
-        sortOrder: sortOrder as 'asc' | 'desc'
+      const filtersSchema = z.object({
+        page: z.string().optional().transform(val => val ? parseInt(val) : 1),
+        limit: z.string().optional().transform(val => val ? parseInt(val) : 20),
+        search: z.string().optional(),
+        type: z.enum(['Individual', 'Corporate', 'All']).optional().default('All'),
+        status: z.enum(['Active', 'Inactive', 'Pending_KYC', 'Blacklisted', 'Lead', 'Prospect', 'All']).optional().default('All'),
+        kycStatus: z.enum(['Pending', 'In_Review', 'Verified', 'Rejected', 'Expired', 'All']).optional().default('All'),
+        riskCategory: z.enum(['Low', 'Medium', 'High', 'Critical', 'All']).optional().default('All'),
+        sortBy: z.string().optional().default('createdAt'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('desc')
       });
+
+      const filters = filtersSchema.parse(req.query);
+      const result = await customerService.getCustomers(filters);
 
       res.json({
         success: true,
-        data: result.customers,
-        pagination: {
-          total: result.total,
-          pages: Math.ceil(result.total / Number(limit)),
-          page: Number(page),
-          limit: Number(limit)
-        }
+        data: result
       });
+
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid query parameters',
+          details: error.errors
+        });
+      }
       next(error);
     }
-  };
+  }
 
-  getCustomerById = async (req: Request, res: Response, next: NextFunction) => {
+  async getCustomer(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const customer = await this.customerService.getCustomerById(id);
+      const customer = await customerService.getCustomerById(id);
 
       if (!customer) {
         return res.status(404).json({
-          success: false,
-          error: 'Customer not found'
+          error: 'Customer not found',
+          message: `Customer with ID ${id} does not exist`
         });
       }
 
@@ -58,298 +55,214 @@ export class CustomerController {
         success: true,
         data: customer
       });
+
     } catch (error) {
       next(error);
     }
-  };
+  }
 
-  createCustomer = async (req: Request, res: Response, next: NextFunction) => {
+  async createCustomer(req: Request, res: Response, next: NextFunction) {
     try {
-      const customerData = req.body;
-      const customer = await this.customerService.createCustomer(customerData);
+      const validatedData = customerSchema.parse(req.body);
+      const user = (req as any).user;
+
+      const customer = await customerService.createCustomer({
+        ...validatedData,
+        createdBy: user.id,
+        updatedBy: user.id
+      });
 
       res.status(201).json({
         success: true,
-        data: customer,
-        message: 'Customer created successfully'
+        message: 'Customer created successfully',
+        data: customer
       });
+
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
+        });
+      }
       next(error);
     }
-  };
+  }
 
-  updateCustomer = async (req: Request, res: Response, next: NextFunction) => {
+  async updateCustomer(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const customerData = req.body;
-      
-      const customer = await this.customerService.updateCustomer(id, customerData);
+      const validatedData = customerSchema.partial().parse(req.body);
+      const user = (req as any).user;
+
+      const customer = await customerService.updateCustomer(id, {
+        ...validatedData,
+        updatedBy: user.id
+      });
+
+      if (!customer) {
+        return res.status(404).json({
+          error: 'Customer not found',
+          message: `Customer with ID ${id} does not exist`
+        });
+      }
 
       res.json({
         success: true,
-        data: customer,
-        message: 'Customer updated successfully'
+        message: 'Customer updated successfully',
+        data: customer
       });
+
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
+        });
+      }
       next(error);
     }
-  };
+  }
 
-  deleteCustomer = async (req: Request, res: Response, next: NextFunction) => {
+  async deleteCustomer(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      await this.customerService.deleteCustomer(id);
+      const user = (req as any).user;
+
+      const success = await customerService.deleteCustomer(id, user.id);
+
+      if (!success) {
+        return res.status(404).json({
+          error: 'Customer not found',
+          message: `Customer with ID ${id} does not exist`
+        });
+      }
 
       res.json({
         success: true,
         message: 'Customer deleted successfully'
       });
+
     } catch (error) {
       next(error);
     }
-  };
+  }
 
-  // Contact management
-  getCustomerContacts = async (req: Request, res: Response, next: NextFunction) => {
+  async getCustomerStats(req: Request, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
-      const contacts = await this.customerService.getCustomerContacts(id);
-
-      res.json({
-        success: true,
-        data: contacts
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  addCustomerContact = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      const contactData = req.body;
-      
-      const contact = await this.customerService.addCustomerContact(id, contactData);
-
-      res.status(201).json({
-        success: true,
-        data: contact,
-        message: 'Contact added successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  updateCustomerContact = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { contactId } = req.params;
-      const contactData = req.body;
-      
-      const contact = await this.customerService.updateCustomerContact(contactId, contactData);
-
-      res.json({
-        success: true,
-        data: contact,
-        message: 'Contact updated successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  deleteCustomerContact = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { contactId } = req.params;
-      await this.customerService.deleteCustomerContact(contactId);
-
-      res.json({
-        success: true,
-        message: 'Contact deleted successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  // Address management
-  getCustomerAddresses = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      const addresses = await this.customerService.getCustomerAddresses(id);
-
-      res.json({
-        success: true,
-        data: addresses
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  addCustomerAddress = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      const addressData = req.body;
-      
-      const address = await this.customerService.addCustomerAddress(id, addressData);
-
-      res.status(201).json({
-        success: true,
-        data: address,
-        message: 'Address added successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  updateCustomerAddress = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { addressId } = req.params;
-      const addressData = req.body;
-      
-      const address = await this.customerService.updateCustomerAddress(addressId, addressData);
-
-      res.json({
-        success: true,
-        data: address,
-        message: 'Address updated successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  deleteCustomerAddress = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { addressId } = req.params;
-      await this.customerService.deleteCustomerAddress(addressId);
-
-      res.json({
-        success: true,
-        message: 'Address deleted successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  // Document management
-  getCustomerDocuments = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      const documents = await this.customerService.getCustomerDocuments(id);
-
-      res.json({
-        success: true,
-        data: documents
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  uploadCustomerDocument = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { id } = req.params;
-      const file = req.file;
-      const { type } = req.body;
-
-      if (!file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded'
-        });
-      }
-
-      const document = await this.customerService.uploadCustomerDocument(id, file, type);
-
-      res.status(201).json({
-        success: true,
-        data: document,
-        message: 'Document uploaded successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  deleteCustomerDocument = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { documentId } = req.params;
-      await this.customerService.deleteCustomerDocument(documentId);
-
-      res.json({
-        success: true,
-        message: 'Document deleted successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  // Bulk operations
-  bulkImportCustomers = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const file = req.file;
-
-      if (!file) {
-        return res.status(400).json({
-          success: false,
-          error: 'No file uploaded'
-        });
-      }
-
-      const result = await this.customerService.bulkImportCustomers(file);
-
-      res.json({
-        success: true,
-        data: result,
-        message: 'Customers imported successfully'
-      });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  bulkExportCustomers = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { format = 'csv', filters } = req.body;
-      const result = await this.customerService.bulkExportCustomers(format, filters);
-
-      res.setHeader('Content-Type', 'application/octet-stream');
-      res.setHeader('Content-Disposition', `attachment; filename=customers.${format}`);
-      res.send(result);
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  // Analytics
-  getCustomerStats = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const stats = await this.customerService.getCustomerStats();
+      const stats = await customerService.getCustomerStats();
 
       res.json({
         success: true,
         data: stats
       });
+
     } catch (error) {
       next(error);
     }
-  };
+  }
 
-  getCustomerDemographics = async (req: Request, res: Response, next: NextFunction) => {
+  async bulkAction(req: Request, res: Response, next: NextFunction) {
     try {
-      const demographics = await this.customerService.getCustomerDemographics();
+      const bulkSchema = z.object({
+        action: z.enum(['activate', 'deactivate', 'delete', 'export']),
+        customerIds: z.array(z.string()).min(1, 'At least one customer ID is required'),
+        parameters: z.record(z.any()).optional()
+      });
+
+      const { action, customerIds, parameters } = bulkSchema.parse(req.body);
+      const user = (req as any).user;
+
+      const result = await customerService.bulkAction(action, customerIds, user.id, parameters);
 
       res.json({
         success: true,
-        data: demographics
+        message: `Bulk ${action} completed`,
+        data: result
       });
+
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
+        });
+      }
       next(error);
     }
-  };
+  }
+
+  async exportCustomers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const exportSchema = z.object({
+        format: z.enum(['csv', 'excel']).default('csv'),
+        filters: z.record(z.any()).optional()
+      });
+
+      const { format, filters } = exportSchema.parse(req.query);
+      const result = await customerService.exportCustomers(format, filters);
+
+      res.setHeader('Content-Type', format === 'csv' ? 'text/csv' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="customers.${format}"`);
+      res.send(result);
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Invalid export parameters',
+          details: error.errors
+        });
+      }
+      next(error);
+    }
+  }
+
+  async uploadDocument(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { customerId } = req.params;
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({
+          error: 'No file uploaded',
+          message: 'Please select a file to upload'
+        });
+      }
+
+      const documentSchema = z.object({
+        category: z.enum(['KYC', 'Identity', 'Financial', 'Legal', 'Risk_Assessment', 'Agreements', 'Other']),
+        type: z.string().min(1, 'Document type is required'),
+        title: z.string().min(1, 'Document title is required'),
+        description: z.string().optional()
+      });
+
+      const documentData = documentSchema.parse(req.body);
+      const user = (req as any).user;
+
+      const document = await customerService.uploadDocument(customerId, {
+        ...documentData,
+        fileName: file.filename,
+        originalName: file.originalname,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        fileUrl: `/uploads/${file.filename}`,
+        uploadedBy: user.id
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Document uploaded successfully',
+        data: document
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.errors
+        });
+      }
+      next(error);
+    }
+  }
 }
