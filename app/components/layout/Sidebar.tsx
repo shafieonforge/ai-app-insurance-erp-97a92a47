@@ -4,16 +4,9 @@ import React, { useState } from 'react';
 import { 
   Users, 
   FileText, 
-  DollarSign, 
   Shield, 
   BarChart3, 
   Settings, 
-  UserCheck, 
-  Building2, 
-  CreditCard,
-  Calculator,
-  TrendingUp,
-  Archive,
   Menu,
   X,
   ChevronDown
@@ -44,59 +37,12 @@ const navigation = [
   {
     name: 'Policy Management',
     key: 'policies',
-    icon: Shield,
-    children: [
-      { name: 'All Policies', key: 'policies' },
-      { name: 'New Policy', key: 'policies-new' },
-      { name: 'Renewals', key: 'policies-renewals' },
-      { name: 'Endorsements', key: 'policies-endorsements' },
-    ]
+    icon: Shield
   },
   {
     name: 'Claims Management',
     key: 'claims',
-    icon: FileText,
-    children: [
-      { name: 'All Claims', key: 'claims' },
-      { name: 'New Claim', key: 'claims-new' },
-      { name: 'Pending Claims', key: 'claims-pending' },
-      { name: 'Settled Claims', key: 'claims-settled' },
-    ]
-  },
-  {
-    name: 'Underwriting',
-    key: 'underwriting',
-    icon: UserCheck
-  },
-  {
-    name: 'Billing & Payments',
-    key: 'billing',
-    icon: CreditCard
-  },
-  {
-    name: 'Commission',
-    key: 'commission',
-    icon: DollarSign
-  },
-  {
-    name: 'Product Management',
-    key: 'products',
-    icon: Building2
-  },
-  {
-    name: 'Document Management',
-    key: 'documents',
-    icon: Archive
-  },
-  {
-    name: 'Finance Integration',
-    key: 'finance',
-    icon: Calculator
-  },
-  {
-    name: 'Reports & BI',
-    key: 'reports',
-    icon: TrendingUp
+    icon: FileText
   },
 ];
 

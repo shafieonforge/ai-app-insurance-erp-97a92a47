@@ -14,13 +14,8 @@ import {
   Edit,
   Eye,
   Trash2,
-  UserPlus,
-  UsersIcon,
-  ArrowLeft,
   Building2,
-  Star,
-  Save,
-  X
+  Save
 } from 'lucide-react';
 
 interface Customer {
@@ -34,21 +29,6 @@ interface Customer {
   premiumTotal: number;
   status: 'Active' | 'Inactive' | 'Suspended';
   joinDate: string;
-  lastActivity: string;
-}
-
-interface CustomerGroup {
-  id: string;
-  name: string;
-  description: string;
-  type: 'manual' | 'auto';
-  customerCount: number;
-  totalPremium: number;
-  avgPremium: number;
-  createdDate: string;
-  criteria?: string;
-  tags: string[];
-  isActive: boolean;
 }
 
 const mockCustomers: Customer[] = [
@@ -62,8 +42,7 @@ const mockCustomers: Customer[] = [
     policies: 3,
     premiumTotal: 4500,
     status: 'Active',
-    joinDate: '2023-03-15',
-    lastActivity: '2024-01-10'
+    joinDate: '2023-03-15'
   },
   {
     id: 'CUST-002',
@@ -75,8 +54,7 @@ const mockCustomers: Customer[] = [
     policies: 12,
     premiumTotal: 45000,
     status: 'Active',
-    joinDate: '2022-11-08',
-    lastActivity: '2024-01-12'
+    joinDate: '2022-11-08'
   },
   {
     id: 'CUST-003',
@@ -88,8 +66,7 @@ const mockCustomers: Customer[] = [
     policies: 2,
     premiumTotal: 2800,
     status: 'Active',
-    joinDate: '2023-07-22',
-    lastActivity: '2024-01-08'
+    joinDate: '2023-07-22'
   },
   {
     id: 'CUST-004',
@@ -101,8 +78,7 @@ const mockCustomers: Customer[] = [
     policies: 8,
     premiumTotal: 28500,
     status: 'Suspended',
-    joinDate: '2023-01-30',
-    lastActivity: '2023-12-15'
+    joinDate: '2023-01-30'
   },
   {
     id: 'CUST-005',
@@ -114,62 +90,7 @@ const mockCustomers: Customer[] = [
     policies: 1,
     premiumTotal: 1200,
     status: 'Inactive',
-    joinDate: '2023-09-14',
-    lastActivity: '2023-11-20'
-  }
-];
-
-const mockGroups: CustomerGroup[] = [
-  {
-    id: 'GRP-001',
-    name: 'High-Value Customers',
-    description: 'Customers with premium over $10,000 annually',
-    type: 'auto',
-    customerCount: 143,
-    totalPremium: 2350000,
-    avgPremium: 16434,
-    createdDate: '2024-01-15',
-    criteria: 'Annual Premium >= $10,000',
-    tags: ['premium', 'vip'],
-    isActive: true
-  },
-  {
-    id: 'GRP-002',
-    name: 'Corporate Clients',
-    description: 'All business insurance customers',
-    type: 'auto',
-    customerCount: 89,
-    totalPremium: 1850000,
-    avgPremium: 20787,
-    createdDate: '2024-01-12',
-    criteria: 'Customer Type = Corporate',
-    tags: ['business', 'corporate'],
-    isActive: true
-  },
-  {
-    id: 'GRP-003',
-    name: 'New York Metro Area',
-    description: 'Customers in NY, NJ, CT region',
-    type: 'auto',
-    customerCount: 256,
-    totalPremium: 1200000,
-    avgPremium: 4687,
-    createdDate: '2024-01-10',
-    criteria: 'State IN (NY, NJ, CT)',
-    tags: ['geographic', 'metro'],
-    isActive: true
-  },
-  {
-    id: 'GRP-004',
-    name: 'Young Professionals',
-    description: 'Manually curated group of young professionals',
-    type: 'manual',
-    customerCount: 78,
-    totalPremium: 234000,
-    avgPremium: 3000,
-    createdDate: '2024-01-08',
-    tags: ['age-group', 'manual'],
-    isActive: true
+    joinDate: '2023-09-14'
   }
 ];
 
@@ -179,7 +100,6 @@ interface CustomersModuleProps {
 
 export default function CustomersModule({ currentView }: CustomersModuleProps) {
   const [customers] = useState<Customer[]>(mockCustomers);
-  const [groups] = useState<CustomerGroup[]>(mockGroups);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Add New Customer View
@@ -217,7 +137,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
 
     return (
       <div className="p-6">
-        {/* Header */}
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
           <p className="text-gray-600 mt-1">Create a new customer profile</p>
@@ -433,14 +352,8 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
 
   // Customer Groups View  
   if (currentView === 'customers-groups') {
-    const filteredGroups = groups.filter(group => 
-      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     return (
       <div className="p-6 space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Customer Groups</h1>
@@ -452,134 +365,33 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Groups</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{groups.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-blue-600" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">High-Value Customers</h3>
+            <p className="text-sm text-gray-500 mb-4">Customers with premium over $10,000</p>
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-bold text-blue-600">143</span>
+              <span className="text-sm text-gray-500">customers</span>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Groups</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.filter(g => g.isActive).length}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-green-600" />
+          
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Corporate Clients</h3>
+            <p className="text-sm text-gray-500 mb-4">All business insurance customers</p>
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-bold text-purple-600">89</span>
+              <span className="text-sm text-gray-500">companies</span>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Auto Groups</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.filter(g => g.type === 'auto').length}
-                </p>
-              </div>
-              <Building2 className="h-8 w-8 text-purple-600" />
+          
+          <div className="card p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">New Customers</h3>
+            <p className="text-sm text-gray-500 mb-4">Joined in the last 30 days</p>
+            <div className="flex justify-between items-center">
+              <span className="text-2xl font-bold text-green-600">23</span>
+              <span className="text-sm text-gray-500">customers</span>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.reduce((sum, g) => sum + g.customerCount, 0).toLocaleString()}
-                </p>
-              </div>
-              <UserPlus className="h-8 w-8 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="card p-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search groups..."
-              className="input-field pl-10 w-full"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Groups Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredGroups.map((group) => (
-            <div key={group.id} className="card p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold text-gray-900">{group.name}</h3>
-                  <p className="text-sm text-gray-500">{group.description}</p>
-                </div>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  group.type === 'auto' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-blue-100 text-blue-800'
-                }`}>
-                  {group.type === 'auto' ? 'Auto' : 'Manual'}
-                </span>
-              </div>
-              
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">{group.customerCount}</p>
-                  <p className="text-xs text-gray-500">Customers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">
-                    ${(group.totalPremium / 1000).toFixed(0)}K
-                  </p>
-                  <p className="text-xs text-gray-500">Total Premium</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">
-                    ${group.avgPremium.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500">Avg Premium</p>
-                </div>
-              </div>
-
-              {group.criteria && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-1">Criteria:</p>
-                  <p className="text-sm text-gray-700 bg-gray-100 rounded p-2 font-mono">
-                    {group.criteria}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex space-x-1">
-                  {group.tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button className="text-gray-400 hover:text-blue-600">
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button className="text-gray-400 hover:text-blue-600">
-                    <Edit className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     );
@@ -609,10 +421,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
           <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
         </div>
         <div className="flex space-x-3">
-          <button className="btn-secondary">
-            <UsersIcon className="h-4 w-4 mr-2" />
-            Customer Groups
-          </button>
           <button className="btn-secondary">
             <Download className="h-4 w-4 mr-2" />
             Export
