@@ -12,7 +12,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type and size
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
     const maxSize = 10 * 1024 * 1024; // 10MB
 
@@ -30,7 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Mock file upload - in production, save to cloud storage
     const fileUrl = `https://example.com/uploads/${Date.now()}-${file.name}`;
 
     return NextResponse.json({
@@ -42,7 +40,6 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Error uploading file:', error);
     return NextResponse.json(
       { error: 'Failed to upload file' },
       { status: 500 }

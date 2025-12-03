@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { customerFiltersSchema, paginationSchema, customerFormSchema } from '@/lib/validations/customer';
-import { Customer, CustomersResponse, CustomerStats } from '@/lib/types/customer';
+import { Customer, CustomersResponse, CustomerFilters } from '@/lib/types/customer';
 
-// Mock database - In production, replace with actual database
+// Mock database
 let customers: Customer[] = [
   {
     id: '1',
@@ -198,34 +197,24 @@ let customers: Customer[] = [
   }
 ];
 
-// GET /api/customers - List customers with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     
-    // Parse and validate query parameters
-    const filters = customerFiltersSchema.parse({
+    const filters: CustomerFilters = {
       search: searchParams.get('search') || undefined,
-      type: searchParams.get('type') || 'All',
-      status: searchParams.get('status') || 'All',
-      kycStatus: searchParams.get('kycStatus') || 'All',
-      riskCategory: searchParams.get('riskCategory') || 'All',
-      accountManager: searchParams.get('accountManager') || undefined,
-      industry: searchParams.get('industry') || undefined,
-      createdDateFrom: searchParams.get('createdDateFrom') || undefined,
-      createdDateTo: searchParams.get('createdDateTo') || undefined,
-    });
+      type: (searchParams.get('type') as any) || 'All',
+      status: (searchParams.get('status') as any) || 'All',
+      kycStatus: (searchParams.get('kycStatus') as any) || 'All',
+      riskCategory: (searchParams.get('riskCategory') as any) || 'All',
+    };
 
-    const pagination = paginationSchema.parse({
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '20'),
-      sortBy: searchParams.get('sortBy') || 'createdAt',
-      sortOrder: searchParams.get('sortOrder') || 'desc',
-    });
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const sortBy = searchParams.get('sortBy') || 'createdAt';
+    const sortOrder = searchParams.get('sortOrder') || 'desc';
 
-    // Apply filters
     let filteredCustomers = customers.filter(customer => {
-      // Search filter
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
         const searchableFields = [
@@ -245,49 +234,10 @@ export async function GET(request: NextRequest) {
         if (!matches) return false;
       }
 
-      // Type filter
-      if (filters.type !== 'All' && customer.type !== filters.type) {
-        return false;
-      }
-
-      // Status filter
-      if (filters.status !== 'All' && customer.status !== filters.status) {
-        return false;
-      }
-
-      // KYC Status filter
-      if (filters.kycStatus !== 'All' && customer.kycStatus !== filters.kycStatus) {
-        return false;
-      }
-
-      // Risk Category filter
-      if (filters.riskCategory !== 'All' && customer.riskProfile.riskCategory !== filters.riskCategory) {
-        return false;
-      }
-
-      // Account Manager filter
-      if (filters.accountManager && customer.accountManagerId !== filters.accountManager) {
-        return false;
-      }
-
-      // Industry filter
-      if (filters.industry && customer.type === 'Corporate' && customer.industry !== filters.industry) {
-        return false;
-      }
-
-      // Date filters
-      if (filters.createdDateFrom) {
-        const createdDate = new Date(customer.createdAt);
-        const fromDate = new Date(filters.createdDateFrom);
-        if (createdDate < fromDate) return false;
-      }
-
-      if (filters.createdDateTo) {
-        const createdDate = new Date(customer.createdAt);
-        const toDate = new Date(filters.createdDateTo);
-        toDate.setHours(23, 59, 59, 999);
-        if (createdDate > toDate) return false;
-      }
+      if (filters.type !== 'All' && customer.type !== filters.type) return false;
+      if (filters.status !== 'All' && customer.status !== filters.status) return false;
+      if (filters.kycStatus !== 'All' && customer.kycStatus !== filters.kycStatus) return false;
+      if (filters.riskCategory !== 'All' && customer.riskProfile.riskCategory !== filters.riskCategory) return false;
 
       return true;
     });
@@ -297,7 +247,7 @@ export async function GET(request: NextRequest) {
       let aValue: any;
       let bValue: any;
 
-      switch (pagination.sortBy) {
+      switch (sortBy) {
         case 'displayName':
           aValue = a.displayName;
           bValue = b.displayName;
@@ -305,10 +255,6 @@ export async function GET(request: NextRequest) {
         case 'createdAt':
           aValue = new Date(a.createdAt);
           bValue = new Date(b.createdAt);
-          break;
-        case 'updatedAt':
-          aValue = new Date(a.updatedAt);
-          bValue = new Date(b.updatedAt);
           break;
         case 'totalPremium':
           aValue = a.totalPremium;
@@ -321,15 +267,15 @@ export async function GET(request: NextRequest) {
 
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         const comparison = aValue.localeCompare(bValue);
-        return pagination.sortOrder === 'asc' ? comparison : -comparison;
+        return sortOrder === 'asc' ? comparison : -comparison;
       }
 
       if (typeof aValue === 'number' && typeof bValue === 'number') {
-        return pagination.sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
+        return sortOrder === 'asc' ? aValue - bValue : bValue - aValue;
       }
 
       if (aValue instanceof Date && bValue instanceof Date) {
-        return pagination.sortOrder === 'asc' 
+        return sortOrder === 'asc' 
           ? aValue.getTime() - bValue.getTime() 
           : bValue.getTime() - aValue.getTime();
       }
@@ -337,17 +283,16 @@ export async function GET(request: NextRequest) {
       return 0;
     });
 
-    // Apply pagination
     const total = filteredCustomers.length;
-    const totalPages = Math.ceil(total / pagination.limit);
-    const offset = (pagination.page - 1) * pagination.limit;
-    const paginatedCustomers = filteredCustomers.slice(offset, offset + pagination.limit);
+    const totalPages = Math.ceil(total / limit);
+    const offset = (page - 1) * limit;
+    const paginatedCustomers = filteredCustomers.slice(offset, offset + limit);
 
     const response: CustomersResponse = {
       customers: paginatedCustomers,
       pagination: {
-        page: pagination.page,
-        limit: pagination.limit,
+        page,
+        limit,
         total,
         totalPages,
       },
@@ -365,21 +310,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/customers - Create a new customer
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Validate the request body
-    const validatedData = customerFormSchema.parse(body);
-    
     const newCustomer: Customer = {
       id: (customers.length + 1).toString(),
       customerNumber: `CUST-2024-${(customers.length + 1).toString().padStart(3, '0')}`,
-      ...validatedData,
-      displayName: validatedData.type === 'Individual' 
-        ? `${validatedData.firstName} ${validatedData.lastName}` 
-        : validatedData.companyName!,
+      ...body,
+      displayName: body.type === 'Individual' 
+        ? `${body.firstName} ${body.lastName}` 
+        : body.companyName,
       status: 'Pending_KYC',
       riskProfile: {
         id: (customers.length + 1).toString(),

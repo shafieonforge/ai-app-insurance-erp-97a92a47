@@ -80,67 +80,6 @@ export const customerAddressSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-export const customerDocumentSchema = z.object({
-  category: z.enum(['KYC', 'Identity', 'Financial', 'Legal', 'Risk_Assessment', 'Agreements', 'Other']),
-  type: z.string().min(1, 'Document type is required').max(100),
-  title: z.string().min(1, 'Document title is required').max(200),
-  description: z.string().max(500).optional(),
-  documentNumber: z.string().max(100).optional(),
-  issueDate: z.string().optional(),
-  expiryDate: z.string().optional(),
-  issuingAuthority: z.string().max(200).optional(),
-});
-
-export const customerNoteSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200),
-  content: z.string().min(1, 'Content is required').max(5000),
-  type: z.enum(['General', 'Risk', 'Compliance', 'Service', 'Billing', 'Claims']),
-  priority: z.enum(['Low', 'Medium', 'High', 'Critical']),
-  tags: z.array(z.string().max(50)).default([]),
-  isInternal: z.boolean().default(true),
-  visibleToCustomer: z.boolean().default(false),
-  mentionedUsers: z.array(z.string()).default([]),
-});
-
-export const riskProfileSchema = z.object({
-  overallRiskScore: z.number().min(1).max(100),
-  riskCategory: z.enum(['Low', 'Medium', 'High', 'Critical']),
-  industryRisk: z.number().min(1).max(100),
-  geographicRisk: z.number().min(1).max(100),
-  financialRisk: z.number().min(1).max(100),
-  complianceRisk: z.number().min(1).max(100),
-  claimsHistoryRisk: z.number().min(1).max(100),
-  isHighRisk: z.boolean().default(false),
-  requiresApproval: z.boolean().default(false),
-  blacklisted: z.boolean().default(false),
-  underwritingFlags: z.array(z.string()).default([]),
-  riskNotes: z.string().max(2000).optional(),
-  nextReviewDate: z.string(),
-});
-
-export const customerFiltersSchema = z.object({
-  search: z.string().optional(),
-  type: z.enum(['Individual', 'Corporate', 'All']).default('All'),
-  status: z.enum(['Active', 'Inactive', 'Pending_KYC', 'Blacklisted', 'Lead', 'Prospect', 'All']).default('All'),
-  kycStatus: z.enum(['Pending', 'In_Review', 'Verified', 'Rejected', 'Expired', 'All']).default('All'),
-  riskCategory: z.enum(['Low', 'Medium', 'High', 'Critical', 'All']).default('All'),
-  accountManager: z.string().optional(),
-  industry: z.string().optional(),
-  createdDateFrom: z.string().optional(),
-  createdDateTo: z.string().optional(),
-  lastActivityFrom: z.string().optional(),
-  lastActivityTo: z.string().optional(),
-});
-
-export const paginationSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(20),
-  sortBy: z.string().default('createdAt'),
-  sortOrder: z.enum(['asc', 'desc']).default('desc'),
-});
-
 export type CustomerFormData = z.infer<typeof customerFormSchema>;
 export type CustomerContactFormData = z.infer<typeof customerContactSchema>;
 export type CustomerAddressFormData = z.infer<typeof customerAddressSchema>;
-export type CustomerFiltersData = z.infer<typeof customerFiltersSchema>;
-export type PaginationData = z.infer<typeof paginationSchema>;
