@@ -64,32 +64,6 @@ let globalCustomers: Customer[] = [
     status: 'Active',
     joinDate: '2023-07-22',
     lastActivity: '2024-01-08'
-  },
-  {
-    id: 'CUST-004',
-    name: 'Global Manufacturing Ltd.',
-    email: 'insurance@globalmanuf.com',
-    phone: '+1 (555) 234-5678',
-    type: 'Corporate',
-    location: 'Chicago, IL',
-    policies: 8,
-    premiumTotal: 28500,
-    status: 'Suspended',
-    joinDate: '2023-01-30',
-    lastActivity: '2024-01-05'
-  },
-  {
-    id: 'CUST-005',
-    name: 'Emily Rodriguez',
-    email: 'emily.rodriguez@email.com',
-    phone: '+1 (555) 345-6789',
-    type: 'Individual',
-    location: 'Miami, FL',
-    policies: 1,
-    premiumTotal: 1200,
-    status: 'Inactive',
-    joinDate: '2023-09-14',
-    lastActivity: '2023-12-20'
   }
 ];
 
@@ -134,19 +108,6 @@ const mockGroups: CustomerGroup[] = [
     criteria: 'Annual Premium >= $10,000',
     tags: ['premium', 'vip'],
     isActive: true
-  },
-  {
-    id: 'GRP-002',
-    name: 'Corporate Clients',
-    description: 'All business insurance customers',
-    type: 'auto',
-    customerCount: 89,
-    totalPremium: 1850000,
-    avgPremium: 20787,
-    createdDate: '2024-01-12',
-    criteria: 'Customer Type = Corporate',
-    tags: ['business', 'corporate'],
-    isActive: true
   }
 ];
 
@@ -155,6 +116,7 @@ interface CustomersModuleProps {
 }
 
 export default function CustomersModule({ currentView }: CustomersModuleProps) {
+  // ALL HOOKS MUST BE DECLARED AT THE TOP - NO CONDITIONALS BEFORE THESE!
   const [customers, setCustomers] = useState<Customer[]>(globalCustomers);
   const [groups] = useState<CustomerGroup[]>(mockGroups);
   const [searchTerm, setSearchTerm] = useState('');
@@ -162,6 +124,21 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<'view' | 'edit' | 'delete'>('view');
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  
+  // New customer form hooks - ALWAYS DECLARED
+  const [customerType, setCustomerType] = useState<'Individual' | 'Corporate'>('Individual');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    companyName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Update global state whenever customers change
   useEffect(() => {
@@ -183,10 +160,39 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
     return `CUST-${String(maxId + 1).padStart(3, '0')}`;
   };
 
-  // Add New Customer View
-  if (currentView === 'customers-new') {
-    const [customerType, setCustomerType] = useState<'Individual' | 'Corporate'>('Individual');
-    const [formData, setFormData] = useState({
+  // Handle form submission for new customers
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Create new customer
+    const newCustomer: Customer = {
+      id: generateNextId(),
+      name: customerType === 'Individual' 
+        ? `${formData.firstName} ${formData.lastName}`.trim()
+        : formData.companyName,
+      email: formData.email,
+      phone: formData.phone,
+      type: customerType,
+      location: `${formData.city}, ${formData.state}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Not specified',
+      policies: 0,
+      premiumTotal: 0,
+      status: 'Active',
+      joinDate: new Date().toISOString().split('T')[0],
+      lastActivity: new Date().toISOString().split('T')[0]
+    };
+
+    // Add to customers list
+    setCustomers(prev => [...prev, newCustomer]);
+    globalCustomers = [...globalCustomers, newCustomer];
+    
+    showNotification('success', `Customer "${newCustomer.name}" created successfully!`);
+    
+    // Reset form
+    setFormData({
       firstName: '',
       lastName: '',
       companyName: '',
@@ -197,59 +203,78 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
       state: '',
       zipCode: ''
     });
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    
+    setIsSubmitting(false);
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Create new customer
-      const newCustomer: Customer = {
-        id: generateNextId(),
-        name: customerType === 'Individual' 
-          ? `${formData.firstName} ${formData.lastName}`.trim()
-          : formData.companyName,
-        email: formData.email,
-        phone: formData.phone,
-        type: customerType,
-        location: `${formData.city}, ${formData.state}`.trim().replace(/^,\s*|,\s*$/g, '') || 'Not specified',
-        policies: 0,
-        premiumTotal: 0,
-        status: 'Active',
-        joinDate: new Date().toISOString().split('T')[0],
-        lastActivity: new Date().toISOString().split('T')[0]
-      };
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-      // Add to customers list
-      setCustomers(prev => [...prev, newCustomer]);
-      globalCustomers = [...globalCustomers, newCustomer];
-      
-      showNotification('success', `Customer "${newCustomer.name}" created successfully! They will appear in All Customers.`);
-      
-      // Reset form
-      setFormData({
-        firstName: '',
-        lastName: '',
-        companyName: '',
-        email: '',
-        phone: '',
-        address: '',
-        city: '',
-        state: '',
-        zipCode: ''
-      });
-      
-      setIsSubmitting(false);
-    };
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return 'bg-green-100 text-green-800';
+      case 'Inactive': return 'bg-gray-100 text-gray-800';
+      case 'Suspended': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-    };
+  // Customer Actions
+  const handleView = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setModalType('view');
+    setShowModal(true);
+  };
 
+  const handleEdit = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setModalType('edit');
+    setShowModal(true);
+  };
+
+  const handleDelete = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setModalType('delete');
+    setShowModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (selectedCustomer) {
+      const newCustomers = customers.filter(c => c.id !== selectedCustomer.id);
+      setCustomers(newCustomers);
+      globalCustomers = newCustomers;
+      showNotification('success', `Customer "${selectedCustomer.name}" has been deleted.`);
+      setShowModal(false);
+      setSelectedCustomer(null);
+    }
+  };
+
+  const handleSaveEdit = (updatedCustomer: Customer) => {
+    const newCustomers = customers.map(c => c.id === updatedCustomer.id ? updatedCustomer : c);
+    setCustomers(newCustomers);
+    globalCustomers = newCustomers;
+    showNotification('success', `Customer "${updatedCustomer.name}" has been updated.`);
+    setShowModal(false);
+    setSelectedCustomer(null);
+  };
+
+  // Filter data
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredGroups = groups.filter(group => 
+    group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    group.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // NOW ALL CONDITIONAL RENDERING - NO MORE HOOKS AFTER THIS POINT!
+  
+  // Add New Customer View
+  if (currentView === 'customers-new') {
     return (
       <div className="p-6">
         {/* Notification */}
@@ -275,7 +300,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
-          <p className="text-gray-600 mt-1">Create a new customer profile for the masses</p>
+          <p className="text-gray-600 mt-1">Create a new customer profile</p>
         </div>
 
         <div className="max-w-2xl">
@@ -388,19 +413,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                   </div>
                 </div>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
-                  <input
-                    type="text"
-                    name="address"
-                    className="input-field w-full"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="123 Main Street"
-                  />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
                     <input
@@ -423,17 +436,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                       placeholder="NY"
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
-                    <input
-                      type="text"
-                      name="zipCode"
-                      className="input-field w-full"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      placeholder="10001"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
@@ -448,7 +450,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating Customer...
+                    Creating...
                   </>
                 ) : (
                   <>
@@ -466,37 +468,12 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
 
   // Customer Groups View  
   if (currentView === 'customers-groups') {
-    const filteredGroups = groups.filter(group => 
-      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     return (
       <div className="p-6 space-y-6">
-        {notification && (
-          <div className={`fixed top-4 right-4 z-50 flex items-center p-4 rounded-lg shadow-lg border-l-4 ${
-            notification.type === 'success' 
-              ? 'bg-green-50 text-green-800 border-green-500' 
-              : 'bg-red-50 text-red-800 border-red-500'
-          }`}>
-            <div className="flex items-center">
-              {notification.type === 'success' ? (
-                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
-              ) : (
-                <AlertCircle className="h-5 w-5 mr-2 text-red-600" />
-              )}
-              <div>
-                <p className="font-medium">{notification.type === 'success' ? 'Success!' : 'Error!'}</p>
-                <p className="text-sm">{notification.message}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Customer Groups</h1>
-            <p className="text-gray-600 mt-1">Organize and segment your customers for the masses</p>
+            <p className="text-gray-600 mt-1">Organize and segment your customers</p>
           </div>
           <button className="btn-primary">
             <Plus className="h-4 w-4 mr-2" />
@@ -512,39 +489,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                 <p className="text-2xl font-bold text-gray-900 mt-1">{groups.length}</p>
               </div>
               <Users className="h-8 w-8 text-blue-600" />
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Groups</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.filter(g => g.isActive).length}
-                </p>
-              </div>
-              <Star className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Auto Groups</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.filter(g => g.type === 'auto').length}
-                </p>
-              </div>
-              <Building2 className="h-8 w-8 text-purple-600" />
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {groups.reduce((sum, g) => sum + g.customerCount, 0).toLocaleString()}
-                </p>
-              </div>
-              <UserPlus className="h-8 w-8 text-yellow-600" />
             </div>
           </div>
         </div>
@@ -570,61 +514,14 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                   <h3 className="font-semibold text-gray-900">{group.name}</h3>
                   <p className="text-sm text-gray-500">{group.description}</p>
                 </div>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  group.type === 'auto' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-blue-100 text-blue-800'
-                }`}>
-                  {group.type === 'auto' ? 'Auto' : 'Manual'}
+                <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                  Auto
                 </span>
               </div>
-              
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
                   <p className="text-lg font-bold text-gray-900">{group.customerCount}</p>
                   <p className="text-xs text-gray-500">Customers</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">
-                    ${(group.totalPremium / 1000).toFixed(0)}K
-                  </p>
-                  <p className="text-xs text-gray-500">Total Premium</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">
-                    ${group.avgPremium.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500">Avg Premium</p>
-                </div>
-              </div>
-
-              {group.criteria && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-1">Criteria:</p>
-                  <p className="text-sm text-gray-700 bg-gray-100 rounded p-2 font-mono">
-                    {group.criteria}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex space-x-1">
-                  {group.tags.map((tag, index) => (
-                    <span 
-                      key={index}
-                      className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button className="text-gray-400 hover:text-blue-600">
-                    <Eye className="h-4 w-4" />
-                  </button>
-                  <button className="text-gray-400 hover:text-blue-600">
-                    <Edit className="h-4 w-4" />
-                  </button>
                 </div>
               </div>
             </div>
@@ -634,60 +531,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
     );
   }
 
-  // Customer Actions
-  const handleView = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setModalType('view');
-    setShowModal(true);
-  };
-
-  const handleEdit = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setModalType('edit');
-    setShowModal(true);
-  };
-
-  const handleDelete = (customer: Customer) => {
-    setSelectedCustomer(customer);
-    setModalType('delete');
-    setShowModal(true);
-  };
-
-  const confirmDelete = () => {
-    if (selectedCustomer) {
-      const newCustomers = customers.filter(c => c.id !== selectedCustomer.id);
-      setCustomers(newCustomers);
-      globalCustomers = newCustomers;
-      showNotification('success', `Customer "${selectedCustomer.name}" has been permanently deleted.`);
-      setShowModal(false);
-      setSelectedCustomer(null);
-    }
-  };
-
-  const handleSaveEdit = (updatedCustomer: Customer) => {
-    const newCustomers = customers.map(c => c.id === updatedCustomer.id ? updatedCustomer : c);
-    setCustomers(newCustomers);
-    globalCustomers = newCustomers;
-    showNotification('success', `Customer "${updatedCustomer.name}" has been successfully updated.`);
-    setShowModal(false);
-    setSelectedCustomer(null);
-  };
-
   // Default: All Customers View
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      case 'Inactive': return 'bg-gray-100 text-gray-800';
-      case 'Suspended': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="p-6 space-y-6">
       {/* Notification */}
@@ -714,7 +558,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">All Customers</h1>
-          <p className="text-gray-600 mt-1">Manage individual and corporate customers for the masses</p>
+          <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
         </div>
         <div className="flex space-x-3">
           <button className="btn-secondary">
@@ -818,12 +662,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                   Type
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Policies
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Premium
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -857,10 +695,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                         <Phone className="h-4 w-4 text-gray-400 mr-2" />
                         {customer.phone}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                        {customer.location}
-                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -872,12 +706,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                       {customer.type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {customer.policies}
-                  </td>
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                    ${customer.premiumTotal.toLocaleString()}
-                  </td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
                       {customer.status}
@@ -888,26 +716,20 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
                       <button 
                         className="text-gray-400 hover:text-blue-600 transition-colors"
                         onClick={() => handleView(customer)}
-                        title="View Customer Details"
                       >
                         <Eye className="h-4 w-4" />
                       </button>
                       <button 
                         className="text-gray-400 hover:text-blue-600 transition-colors"
                         onClick={() => handleEdit(customer)}
-                        title="Edit Customer Information"
                       >
                         <Edit className="h-4 w-4" />
                       </button>
                       <button 
                         className="text-gray-400 hover:text-red-600 transition-colors"
                         onClick={() => handleDelete(customer)}
-                        title="Delete Customer Permanently"
                       >
                         <Trash2 className="h-4 w-4" />
-                      </button>
-                      <button className="text-gray-400 hover:text-gray-600">
-                        <MoreHorizontal className="h-4 w-4" />
                       </button>
                     </div>
                   </td>
@@ -973,17 +795,15 @@ function CustomerModal({ customer, type, onClose, onSave, onDelete }: CustomerMo
             </div>
             
             <p className="text-gray-700 mb-6">
-              Are you sure you want to permanently delete <span className="font-semibold">"{customer.name}"</span>? 
-              This will remove their profile and all associated data from the system.
+              Are you sure you want to delete <span className="font-semibold">"{customer.name}"</span>?
             </p>
             
             <div className="flex justify-end space-x-3">
               <button onClick={onClose} className="btn-secondary">
                 Cancel
               </button>
-              <button onClick={onDelete} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                <Trash2 className="h-4 w-4 mr-2 inline" />
-                Delete Customer
+              <button onClick={onDelete} className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">
+                Delete
               </button>
             </div>
           </div>
@@ -999,7 +819,7 @@ function CustomerModal({ customer, type, onClose, onSave, onDelete }: CustomerMo
         <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full">
           <div className="flex items-center justify-between p-6 border-b">
             <h3 className="text-lg font-semibold text-gray-900">
-              {type === 'view' ? 'Customer Details' : 'Edit Customer Information'}
+              {type === 'view' ? 'Customer Details' : 'Edit Customer'}
             </h3>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
               <X className="h-6 w-6" />
@@ -1036,94 +856,6 @@ function CustomerModal({ customer, type, onClose, onSave, onDelete }: CustomerMo
                     className="input-field w-full"
                   />
                 )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                {type === 'view' ? (
-                  <p className="text-gray-900 py-2">{customer.phone}</p>
-                ) : (
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={editData.phone}
-                    onChange={handleInputChange}
-                    className="input-field w-full"
-                  />
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                {type === 'view' ? (
-                  <p className="text-gray-900 py-2">{customer.type}</p>
-                ) : (
-                  <select
-                    name="type"
-                    value={editData.type}
-                    onChange={handleInputChange}
-                    className="input-field w-full"
-                  >
-                    <option value="Individual">Individual</option>
-                    <option value="Corporate">Corporate</option>
-                  </select>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                {type === 'view' ? (
-                  <p className="text-gray-900 py-2">{customer.location}</p>
-                ) : (
-                  <input
-                    type="text"
-                    name="location"
-                    value={editData.location}
-                    onChange={handleInputChange}
-                    className="input-field w-full"
-                  />
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                {type === 'view' ? (
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                    customer.status === 'Active' ? 'bg-green-100 text-green-800' :
-                    customer.status === 'Inactive' ? 'bg-gray-100 text-gray-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {customer.status}
-                  </span>
-                ) : (
-                  <select
-                    name="status"
-                    value={editData.status}
-                    onChange={handleInputChange}
-                    className="input-field w-full"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                    <option value="Suspended">Suspended</option>
-                  </select>
-                )}
-              </div>
-              
-              <div className="md:col-span-2">
-                <div className="grid grid-cols-3 gap-4 text-sm">
-                  <div className="bg-blue-50 p-4 rounded-lg text-center">
-                    <label className="block font-medium text-gray-700 mb-1">Policies</label>
-                    <p className="text-2xl font-bold text-blue-600">{customer.policies}</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded-lg text-center">
-                    <label className="block font-medium text-gray-700 mb-1">Total Premium</label>
-                    <p className="text-2xl font-bold text-green-600">${customer.premiumTotal.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-purple-50 p-4 rounded-lg text-center">
-                    <label className="block font-medium text-gray-700 mb-1">Join Date</label>
-                    <p className="text-lg font-semibold text-purple-600">{new Date(customer.joinDate).toLocaleDateString()}</p>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
