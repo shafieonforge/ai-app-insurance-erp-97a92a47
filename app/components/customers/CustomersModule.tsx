@@ -18,7 +18,9 @@ import {
   UsersIcon,
   ArrowLeft,
   Building2,
-  Star
+  Star,
+  Save,
+  X
 } from 'lucide-react';
 
 interface Customer {
@@ -143,6 +145,31 @@ const mockGroups: CustomerGroup[] = [
     criteria: 'Customer Type = Corporate',
     tags: ['business', 'corporate'],
     isActive: true
+  },
+  {
+    id: 'GRP-003',
+    name: 'New York Metro Area',
+    description: 'Customers in NY, NJ, CT region',
+    type: 'auto',
+    customerCount: 256,
+    totalPremium: 1200000,
+    avgPremium: 4687,
+    createdDate: '2024-01-10',
+    criteria: 'State IN (NY, NJ, CT)',
+    tags: ['geographic', 'metro'],
+    isActive: true
+  },
+  {
+    id: 'GRP-004',
+    name: 'Young Professionals',
+    description: 'Manually curated group of young professionals',
+    type: 'manual',
+    customerCount: 78,
+    totalPremium: 234000,
+    avgPremium: 3000,
+    createdDate: '2024-01-08',
+    tags: ['age-group', 'manual'],
+    isActive: true
   }
 ];
 
@@ -154,287 +181,263 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
   const [customers] = useState<Customer[]>(mockCustomers);
   const [groups] = useState<CustomerGroup[]>(mockGroups);
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // All Customers View
-  if (currentView === 'customers') {
-    const filteredCustomers = customers.filter(customer => 
-      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case 'Active': return 'bg-green-100 text-green-800';
-        case 'Inactive': return 'bg-gray-100 text-gray-800';
-        case 'Suspended': return 'bg-red-100 text-red-800';
-        default: return 'bg-gray-100 text-gray-800';
-      }
+  // Add New Customer View
+  if (currentView === 'customers-new') {
+    const [customerType, setCustomerType] = useState<'Individual' | 'Corporate'>('Individual');
+    const [formData, setFormData] = useState({
+      firstName: '',
+      lastName: '',
+      companyName: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      zipCode: ''
+    });
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      alert('Customer created successfully!');
+      setIsSubmitting(false);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setFormData(prev => ({ ...prev, [name]: value }));
     };
 
     return (
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
-            <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
-          </div>
-          <div className="flex space-x-3">
-            <button className="btn-secondary">
-              <UsersIcon className="h-4 w-4 mr-2" />
-              Customer Groups
-            </button>
-            <button className="btn-secondary">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </button>
-            <button className="btn-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Customer
-            </button>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length}</p>
-              </div>
-              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Users className="h-5 w-5 text-blue-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {customers.filter(c => c.status === 'Active').length}
-                </p>
-              </div>
-              <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
-                <Users className="h-5 w-5 text-green-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Corporate Clients</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  {customers.filter(c => c.type === 'Corporate').length}
-                </p>
-              </div>
-              <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                <Building2 className="h-5 w-5 text-purple-600" />
-              </div>
-            </div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Premium</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">
-                  ${customers.reduce((sum, c) => sum + c.premiumTotal, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="h-10 w-10 bg-yellow-50 rounded-lg flex items-center justify-center">
-                <Users className="h-5 w-5 text-yellow-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Search and Filters */}
-        <div className="card p-6">
-          <div className="flex items-center space-x-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search customers..."
-                className="input-field pl-10 w-full"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <button className="btn-secondary">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </button>
-          </div>
-        </div>
-
-        {/* Customer Table */}
-        <div className="card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Policies
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Premium
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                          <span className="text-white text-sm font-semibold">
-                            {customer.name.charAt(0)}
-                          </span>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{customer.name}</div>
-                          <div className="text-sm text-gray-500">{customer.id}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <div className="flex items-center text-sm text-gray-900">
-                          <Mail className="h-4 w-4 text-gray-400 mr-2" />
-                          {customer.email}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <Phone className="h-4 w-4 text-gray-400 mr-2" />
-                          {customer.phone}
-                        </div>
-                        <div className="flex items-center text-sm text-gray-500">
-                          <MapPin className="h-4 w-4 text-gray-400 mr-2" />
-                          {customer.location}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        customer.type === 'Corporate' 
-                          ? 'bg-purple-100 text-purple-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {customer.type}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {customer.policies}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                      ${customer.premiumTotal.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
-                        {customer.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-2">
-                        <button className="text-gray-400 hover:text-blue-600">
-                          <Eye className="h-4 w-4" />
-                        </button>
-                        <button className="text-gray-400 hover:text-blue-600">
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button className="text-gray-400 hover:text-red-600">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Add Customer View
-  if (currentView === 'customers-new') {
-    return (
       <div className="p-6">
-        <div className="mb-6 flex items-center space-x-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg">
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
-            <p className="text-gray-600 mt-1">Create a new customer profile</p>
-          </div>
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
+          <p className="text-gray-600 mt-1">Create a new customer profile</p>
         </div>
 
         <div className="max-w-2xl">
-          <div className="card p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-                  <input type="text" className="input-field w-full" placeholder="John" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-                  <input type="text" className="input-field w-full" placeholder="Doe" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                <input type="email" className="input-field w-full" placeholder="john.doe@email.com" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                <input type="tel" className="input-field w-full" placeholder="+1 (555) 123-4567" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Customer Type</label>
-                <select className="input-field w-full">
-                  <option>Individual</option>
-                  <option>Corporate</option>
-                </select>
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end space-x-3">
-              <button className="btn-secondary">Cancel</button>
-              <button className="btn-primary">Create Customer</button>
+          {/* Customer Type Selection */}
+          <div className="card p-6 mb-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Type</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <button
+                type="button"
+                className={`p-4 border-2 rounded-xl text-left transition-all ${
+                  customerType === 'Individual'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onClick={() => setCustomerType('Individual')}
+              >
+                <Users className="h-8 w-8 mb-3 text-blue-600" />
+                <h4 className="text-lg font-semibold mb-2">Individual Customer</h4>
+                <p className="text-sm text-gray-600">Personal insurance for individuals</p>
+              </button>
+
+              <button
+                type="button"
+                className={`p-4 border-2 rounded-xl text-left transition-all ${
+                  customerType === 'Corporate'
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-300 hover:border-gray-400'
+                }`}
+                onClick={() => setCustomerType('Corporate')}
+              >
+                <Building2 className="h-8 w-8 mb-3 text-purple-600" />
+                <h4 className="text-lg font-semibold mb-2">Corporate Customer</h4>
+                <p className="text-sm text-gray-600">Business insurance for companies</p>
+              </button>
             </div>
           </div>
+
+          {/* Customer Form */}
+          <form onSubmit={handleSubmit}>
+            <div className="card p-6 mb-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                {customerType === 'Individual' ? 'Personal Information' : 'Company Information'}
+              </h3>
+              
+              <div className="space-y-4">
+                {customerType === 'Individual' ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        required
+                        className="input-field w-full"
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                        placeholder="John"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        required
+                        className="input-field w-full"
+                        value={formData.lastName}
+                        onChange={handleInputChange}
+                        placeholder="Doe"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Company Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="companyName"
+                      required
+                      className="input-field w-full"
+                      value={formData.companyName}
+                      onChange={handleInputChange}
+                      placeholder="TechCorp Solutions Inc."
+                    />
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className="input-field w-full"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="john.doe@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      className="input-field w-full"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Address
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    className="input-field w-full"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      name="city"
+                      className="input-field w-full"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      placeholder="New York"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      name="state"
+                      className="input-field w-full"
+                      value={formData.state}
+                      onChange={handleInputChange}
+                      placeholder="NY"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      ZIP Code
+                    </label>
+                    <input
+                      type="text"
+                      name="zipCode"
+                      className="input-field w-full"
+                      value={formData.zipCode}
+                      onChange={handleInputChange}
+                      placeholder="10001"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button type="button" className="btn-secondary">
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating Customer...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Create Customer
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     );
   }
 
-  // Customer Groups View
+  // Customer Groups View  
   if (currentView === 'customers-groups') {
+    const filteredGroups = groups.filter(group => 
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
       <div className="p-6 space-y-6">
         {/* Header */}
@@ -449,7 +452,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
           </button>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="stat-card">
             <div className="flex items-center justify-between">
@@ -471,11 +474,47 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
               <Star className="h-8 w-8 text-green-600" />
             </div>
           </div>
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Auto Groups</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {groups.filter(g => g.type === 'auto').length}
+                </p>
+              </div>
+              <Building2 className="h-8 w-8 text-purple-600" />
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">
+                  {groups.reduce((sum, g) => sum + g.customerCount, 0).toLocaleString()}
+                </p>
+              </div>
+              <UserPlus className="h-8 w-8 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="card p-6">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search groups..."
+              className="input-field pl-10 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
 
         {/* Groups Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {groups.map((group) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredGroups.map((group) => (
             <div key={group.id} className="card p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
@@ -546,5 +585,225 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
     );
   }
 
-  return <div>Unknown view: {currentView}</div>;
+  // Default: All Customers View
+  const filteredCustomers = customers.filter(customer => 
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return 'bg-green-100 text-green-800';
+      case 'Inactive': return 'bg-gray-100 text-gray-800';
+      case 'Suspended': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+          <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
+        </div>
+        <div className="flex space-x-3">
+          <button className="btn-secondary">
+            <UsersIcon className="h-4 w-4 mr-2" />
+            Customer Groups
+          </button>
+          <button className="btn-secondary">
+            <Download className="h-4 w-4 mr-2" />
+            Export
+          </button>
+          <button className="btn-primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Customer
+          </button>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length}</p>
+            </div>
+            <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
+              <Users className="h-5 w-5 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Customers</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {customers.filter(c => c.status === 'Active').length}
+              </p>
+            </div>
+            <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
+              <Users className="h-5 w-5 text-green-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Corporate Clients</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {customers.filter(c => c.type === 'Corporate').length}
+              </p>
+            </div>
+            <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
+              <Building2 className="h-5 w-5 text-purple-600" />
+            </div>
+          </div>
+        </div>
+        
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Premium</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                ${customers.reduce((sum, c) => sum + c.premiumTotal, 0).toLocaleString()}
+              </p>
+            </div>
+            <div className="h-10 w-10 bg-yellow-50 rounded-lg flex items-center justify-center">
+              <Users className="h-5 w-5 text-yellow-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="card p-6">
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search customers..."
+              className="input-field pl-10 w-full"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <button className="btn-secondary">
+            <Filter className="h-4 w-4 mr-2" />
+            Filters
+          </button>
+        </div>
+      </div>
+
+      {/* Customer Table */}
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Contact
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Policies
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Premium
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {filteredCustomers.map((customer) => (
+                <tr key={customer.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                        <span className="text-white text-sm font-semibold">
+                          {customer.name.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                        <div className="text-sm text-gray-500">{customer.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center text-sm text-gray-900">
+                        <Mail className="h-4 w-4 text-gray-400 mr-2" />
+                        {customer.email}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                        {customer.phone}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-500">
+                        <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                        {customer.location}
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      customer.type === 'Corporate' 
+                        ? 'bg-purple-100 text-purple-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {customer.type}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-gray-900">
+                    {customer.policies}
+                  </td>
+                  <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                    ${customer.premiumTotal.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(customer.status)}`}>
+                      {customer.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-2">
+                      <button className="text-gray-400 hover:text-blue-600">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button className="text-gray-400 hover:text-blue-600">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button className="text-gray-400 hover:text-red-600">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                      <button className="text-gray-400 hover:text-gray-600">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
 }
