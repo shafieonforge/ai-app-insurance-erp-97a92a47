@@ -13,7 +13,9 @@ import {
   MapPin,
   Edit,
   Eye,
-  Trash2
+  Trash2,
+  X,
+  Save
 } from 'lucide-react';
 
 interface Customer {
@@ -30,79 +32,62 @@ interface Customer {
   lastActivity: string;
 }
 
-const mockCustomers: Customer[] = [
-  {
-    id: 'CUST-001',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    type: 'Individual',
-    location: 'New York, NY',
-    policies: 3,
-    premiumTotal: 4500,
-    status: 'Active',
-    joinDate: '2023-03-15',
-    lastActivity: '2024-01-10'
-  },
-  {
-    id: 'CUST-002',
-    name: 'TechCorp Solutions Inc.',
-    email: 'admin@techcorp.com',
-    phone: '+1 (555) 987-6543',
-    type: 'Corporate',
-    location: 'San Francisco, CA',
-    policies: 12,
-    premiumTotal: 45000,
-    status: 'Active',
-    joinDate: '2022-11-08',
-    lastActivity: '2024-01-12'
-  },
-  {
-    id: 'CUST-003',
-    name: 'Michael Chen',
-    email: 'michael.chen@email.com',
-    phone: '+1 (555) 456-7890',
-    type: 'Individual',
-    location: 'Los Angeles, CA',
-    policies: 2,
-    premiumTotal: 2800,
-    status: 'Active',
-    joinDate: '2023-07-22',
-    lastActivity: '2024-01-08'
-  },
-  {
-    id: 'CUST-004',
-    name: 'Global Manufacturing Ltd.',
-    email: 'insurance@globalmanuf.com',
-    phone: '+1 (555) 234-5678',
-    type: 'Corporate',
-    location: 'Chicago, IL',
-    policies: 8,
-    premiumTotal: 28500,
-    status: 'Suspended',
-    joinDate: '2023-01-30',
-    lastActivity: '2023-12-15'
-  },
-  {
-    id: 'CUST-005',
-    name: 'Emily Rodriguez',
-    email: 'emily.rodriguez@email.com',
-    phone: '+1 (555) 345-6789',
-    type: 'Individual',
-    location: 'Miami, FL',
-    policies: 1,
-    premiumTotal: 1200,
-    status: 'Inactive',
-    joinDate: '2023-09-14',
-    lastActivity: '2023-11-20'
-  }
-];
-
 export default function CustomersModule() {
-  const [customers] = useState<Customer[]>(mockCustomers);
+  const [customers, setCustomers] = useState<Customer[]>([
+    {
+      id: 'CUST-001',
+      name: 'Sarah Johnson',
+      email: 'sarah.johnson@email.com',
+      phone: '+1 (555) 123-4567',
+      type: 'Individual',
+      location: 'New York, NY',
+      policies: 3,
+      premiumTotal: 4500,
+      status: 'Active',
+      joinDate: '2023-03-15',
+      lastActivity: '2024-01-10'
+    },
+    {
+      id: 'CUST-002',
+      name: 'TechCorp Solutions Inc.',
+      email: 'admin@techcorp.com',
+      phone: '+1 (555) 987-6543',
+      type: 'Corporate',
+      location: 'San Francisco, CA',
+      policies: 12,
+      premiumTotal: 45000,
+      status: 'Active',
+      joinDate: '2022-11-08',
+      lastActivity: '2024-01-12'
+    },
+    {
+      id: 'CUST-003',
+      name: 'Michael Chen',
+      email: 'michael.chen@email.com',
+      phone: '+1 (555) 456-7890',
+      type: 'Individual',
+      location: 'Los Angeles, CA',
+      policies: 2,
+      premiumTotal: 2800,
+      status: 'Active',
+      joinDate: '2023-07-22',
+      lastActivity: '2024-01-08'
+    }
+  ]);
+
+  const [showAddForm, setShowAddForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'All' | 'Individual' | 'Corporate'>('All');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Active' | 'Inactive' | 'Suspended'>('All');
+  
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    type: 'Individual' as 'Individual' | 'Corporate',
+    location: '',
+    status: 'Active' as 'Active' | 'Inactive' | 'Suspended'
+  });
 
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -127,6 +112,44 @@ export default function CustomersModule() {
     }
   };
 
+  const handleAddCustomer = (e: React.FormEvent) => {
+    e.preventDefault();
+    const customer: Customer = {
+      id: `CUST-${String(customers.length + 1).padStart(3, '0')}`,
+      name: newCustomer.name,
+      email: newCustomer.email,
+      phone: newCustomer.phone,
+      type: newCustomer.type,
+      location: newCustomer.location,
+      policies: 0,
+      premiumTotal: 0,
+      status: newCustomer.status,
+      joinDate: new Date().toISOString().split('T')[0],
+      lastActivity: new Date().toISOString().split('T')[0]
+    };
+
+    setCustomers([...customers, customer]);
+    setNewCustomer({
+      name: '',
+      email: '',
+      phone: '',
+      type: 'Individual',
+      location: '',
+      status: 'Active'
+    });
+    setShowAddForm(false);
+    
+    // Show success message
+    alert('Customer added successfully!');
+  };
+
+  const handleDeleteCustomer = (customerId: string) => {
+    if (window.confirm('Are you sure you want to delete this customer?')) {
+      setCustomers(customers.filter(c => c.id !== customerId));
+      alert('Customer deleted successfully!');
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -140,12 +163,136 @@ export default function CustomersModule() {
             <Download className="h-4 w-4 mr-2" />
             Export
           </button>
-          <button className="btn-primary">
+          <button 
+            className="btn-primary"
+            onClick={() => setShowAddForm(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Customer
           </button>
         </div>
       </div>
+
+      {/* Add Customer Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Add New Customer</h2>
+              <button
+                onClick={() => setShowAddForm(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddCustomer} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="input-field w-full"
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                  placeholder="Enter customer name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  className="input-field w-full"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                  placeholder="Enter email address"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  required
+                  className="input-field w-full"
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Type
+                </label>
+                <select
+                  className="input-field w-full"
+                  value={newCustomer.type}
+                  onChange={(e) => setNewCustomer({...newCustomer, type: e.target.value as 'Individual' | 'Corporate'})}
+                >
+                  <option value="Individual">Individual</option>
+                  <option value="Corporate">Corporate</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="input-field w-full"
+                  value={newCustomer.location}
+                  onChange={(e) => setNewCustomer({...newCustomer, location: e.target.value})}
+                  placeholder="Enter location"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  className="input-field w-full"
+                  value={newCustomer.status}
+                  onChange={(e) => setNewCustomer({...newCustomer, status: e.target.value as 'Active' | 'Inactive' | 'Suspended'})}
+                >
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                  <option value="Suspended">Suspended</option>
+                </select>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddForm(false)}
+                  className="btn-secondary flex-1"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary flex-1"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Add Customer
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -337,7 +484,10 @@ export default function CustomersModule() {
                       <button className="text-gray-400 hover:text-blue-600">
                         <Edit className="h-4 w-4" />
                       </button>
-                      <button className="text-gray-400 hover:text-red-600">
+                      <button 
+                        className="text-gray-400 hover:text-red-600"
+                        onClick={() => handleDeleteCustomer(customer.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
                       </button>
                       <button className="text-gray-400 hover:text-gray-600">
@@ -351,6 +501,13 @@ export default function CustomersModule() {
           </table>
         </div>
       </div>
+
+      {filteredCustomers.length === 0 && (
+        <div className="text-center py-8">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">No customers found matching your criteria</p>
+        </div>
+      )}
 
       {/* Pagination */}
       <div className="flex items-center justify-between">
