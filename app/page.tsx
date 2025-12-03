@@ -1,19 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import LoginForm from './components/auth/LoginForm';
-import DashboardLayout from './dashboard/layout';
+import Component from './components/Component';
 
 export default function Home() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
-
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
-  }
-
-  return <DashboardLayout />;
+  return <Component />;
 }
