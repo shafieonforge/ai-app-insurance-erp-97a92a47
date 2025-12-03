@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { 
   Users, 
   Search, 
@@ -14,8 +14,11 @@ import {
   Edit,
   Eye,
   Trash2,
+  UserPlus,
   Building2,
-  Save
+  Star,
+  Save,
+  X
 } from 'lucide-react';
 
 interface Customer {
@@ -29,6 +32,21 @@ interface Customer {
   premiumTotal: number;
   status: 'Active' | 'Inactive' | 'Suspended';
   joinDate: string;
+  lastActivity: string;
+}
+
+interface CustomerGroup {
+  id: string;
+  name: string;
+  description: string;
+  type: 'manual' | 'auto';
+  customerCount: number;
+  totalPremium: number;
+  avgPremium: number;
+  createdDate: string;
+  criteria?: string;
+  tags: string[];
+  isActive: boolean;
 }
 
 const mockCustomers: Customer[] = [
@@ -42,7 +60,8 @@ const mockCustomers: Customer[] = [
     policies: 3,
     premiumTotal: 4500,
     status: 'Active',
-    joinDate: '2023-03-15'
+    joinDate: '2023-03-15',
+    lastActivity: '2024-01-10'
   },
   {
     id: 'CUST-002',
@@ -54,7 +73,8 @@ const mockCustomers: Customer[] = [
     policies: 12,
     premiumTotal: 45000,
     status: 'Active',
-    joinDate: '2022-11-08'
+    joinDate: '2022-11-08',
+    lastActivity: '2024-01-12'
   },
   {
     id: 'CUST-003',
@@ -66,31 +86,37 @@ const mockCustomers: Customer[] = [
     policies: 2,
     premiumTotal: 2800,
     status: 'Active',
-    joinDate: '2023-07-22'
+    joinDate: '2023-07-22',
+    lastActivity: '2024-01-08'
+  }
+];
+
+const mockGroups: CustomerGroup[] = [
+  {
+    id: 'GRP-001',
+    name: 'High-Value Customers',
+    description: 'Customers with premium over $10,000 annually',
+    type: 'auto',
+    customerCount: 143,
+    totalPremium: 2350000,
+    avgPremium: 16434,
+    createdDate: '2024-01-15',
+    criteria: 'Annual Premium >= $10,000',
+    tags: ['premium', 'vip'],
+    isActive: true
   },
   {
-    id: 'CUST-004',
-    name: 'Global Manufacturing Ltd.',
-    email: 'insurance@globalmanuf.com',
-    phone: '+1 (555) 234-5678',
-    type: 'Corporate',
-    location: 'Chicago, IL',
-    policies: 8,
-    premiumTotal: 28500,
-    status: 'Suspended',
-    joinDate: '2023-01-30'
-  },
-  {
-    id: 'CUST-005',
-    name: 'Emily Rodriguez',
-    email: 'emily.rodriguez@email.com',
-    phone: '+1 (555) 345-6789',
-    type: 'Individual',
-    location: 'Miami, FL',
-    policies: 1,
-    premiumTotal: 1200,
-    status: 'Inactive',
-    joinDate: '2023-09-14'
+    id: 'GRP-002',
+    name: 'Corporate Clients',
+    description: 'All business insurance customers',
+    type: 'auto',
+    customerCount: 89,
+    totalPremium: 1850000,
+    avgPremium: 20787,
+    createdDate: '2024-01-12',
+    criteria: 'Customer Type = Corporate',
+    tags: ['business', 'corporate'],
+    isActive: true
   }
 ];
 
@@ -98,310 +124,395 @@ interface CustomersModuleProps {
   currentView: string;
 }
 
-export default function CustomersModule({ currentView }: CustomersModuleProps) {
-  const [customers] = useState<Customer[]>(mockCustomers);
-  const [searchTerm, setSearchTerm] = useState('');
+// Add New Customer Component
+function AddNewCustomerView() {
+  const [customerType, setCustomerType] = useState<'Individual' | 'Corporate'>('Individual');
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    companyName: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Add New Customer View
-  if (currentView === 'customers-new') {
-    const [customerType, setCustomerType] = useState<'Individual' | 'Corporate'>('Individual');
-    const [formData, setFormData] = useState({
-      firstName: '',
-      lastName: '',
-      companyName: '',
-      email: '',
-      phone: '',
-      address: '',
-      city: '',
-      state: '',
-      zipCode: ''
-    });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    alert('Customer created successfully!');
+    setIsSubmitting(false);
+  };
 
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      setIsSubmitting(true);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      alert('Customer created successfully!');
-      setIsSubmitting(false);
-    };
+  return (
+    <div className="p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
+        <p className="text-gray-600 mt-1">Create a new customer profile</p>
+      </div>
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-    };
+      <div className="max-w-2xl">
+        <div className="card p-6 mb-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Type</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <button
+              type="button"
+              className={`p-4 border-2 rounded-xl text-left transition-all ${
+                customerType === 'Individual'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onClick={() => setCustomerType('Individual')}
+            >
+              <Users className="h-8 w-8 mb-3 text-blue-600" />
+              <h4 className="text-lg font-semibold mb-2">Individual Customer</h4>
+              <p className="text-sm text-gray-600">Personal insurance for individuals</p>
+            </button>
 
-    return (
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Add New Customer</h1>
-          <p className="text-gray-600 mt-1">Create a new customer profile</p>
+            <button
+              type="button"
+              className={`p-4 border-2 rounded-xl text-left transition-all ${
+                customerType === 'Corporate'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-300 hover:border-gray-400'
+              }`}
+              onClick={() => setCustomerType('Corporate')}
+            >
+              <Building2 className="h-8 w-8 mb-3 text-purple-600" />
+              <h4 className="text-lg font-semibold mb-2">Corporate Customer</h4>
+              <p className="text-sm text-gray-600">Business insurance for companies</p>
+            </button>
+          </div>
         </div>
 
-        <div className="max-w-2xl">
-          {/* Customer Type Selection */}
+        <form onSubmit={handleSubmit}>
           <div className="card p-6 mb-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Type</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button
-                type="button"
-                className={`p-4 border-2 rounded-xl text-left transition-all ${
-                  customerType === 'Individual'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-                onClick={() => setCustomerType('Individual')}
-              >
-                <Users className="h-8 w-8 mb-3 text-blue-600" />
-                <h4 className="text-lg font-semibold mb-2">Individual Customer</h4>
-                <p className="text-sm text-gray-600">Personal insurance for individuals</p>
-              </button>
-
-              <button
-                type="button"
-                className={`p-4 border-2 rounded-xl text-left transition-all ${
-                  customerType === 'Corporate'
-                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 hover:border-gray-400'
-                }`}
-                onClick={() => setCustomerType('Corporate')}
-              >
-                <Building2 className="h-8 w-8 mb-3 text-purple-600" />
-                <h4 className="text-lg font-semibold mb-2">Corporate Customer</h4>
-                <p className="text-sm text-gray-600">Business insurance for companies</p>
-              </button>
-            </div>
-          </div>
-
-          {/* Customer Form */}
-          <form onSubmit={handleSubmit}>
-            <div className="card p-6 mb-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {customerType === 'Individual' ? 'Personal Information' : 'Company Information'}
-              </h3>
-              
-              <div className="space-y-4">
-                {customerType === 'Individual' ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        required
-                        className="input-field w-full"
-                        value={formData.firstName}
-                        onChange={handleInputChange}
-                        placeholder="John"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        required
-                        className="input-field w-full"
-                        value={formData.lastName}
-                        onChange={handleInputChange}
-                        placeholder="Doe"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Name *
-                    </label>
-                    <input
-                      type="text"
-                      name="companyName"
-                      required
-                      className="input-field w-full"
-                      value={formData.companyName}
-                      onChange={handleInputChange}
-                      placeholder="TechCorp Solutions Inc."
-                    />
-                  </div>
-                )}
-                
+            <h3 className="text-lg font-medium text-gray-900 mb-4">
+              {customerType === 'Individual' ? 'Personal Information' : 'Company Information'}
+            </h3>
+            
+            <div className="space-y-4">
+              {customerType === 'Individual' ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">First Name *</label>
                     <input
-                      type="email"
-                      name="email"
+                      type="text"
+                      name="firstName"
                       required
                       className="input-field w-full"
-                      value={formData.email}
+                      value={formData.firstName}
                       onChange={handleInputChange}
-                      placeholder="john.doe@email.com"
+                      placeholder="John"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number *
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Last Name *</label>
                     <input
-                      type="tel"
-                      name="phone"
+                      type="text"
+                      name="lastName"
                       required
                       className="input-field w-full"
-                      value={formData.phone}
+                      value={formData.lastName}
                       onChange={handleInputChange}
-                      placeholder="+1 (555) 123-4567"
+                      placeholder="Doe"
                     />
                   </div>
                 </div>
-                
+              ) : (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Address
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
                   <input
                     type="text"
-                    name="address"
+                    name="companyName"
+                    required
                     className="input-field w-full"
-                    value={formData.address}
+                    value={formData.companyName}
                     onChange={handleInputChange}
-                    placeholder="123 Main Street"
+                    placeholder="TechCorp Solutions Inc."
                   />
                 </div>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      City
-                    </label>
-                    <input
-                      type="text"
-                      name="city"
-                      className="input-field w-full"
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      placeholder="New York"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State
-                    </label>
-                    <input
-                      type="text"
-                      name="state"
-                      className="input-field w-full"
-                      value={formData.state}
-                      onChange={handleInputChange}
-                      placeholder="NY"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      ZIP Code
-                    </label>
-                    <input
-                      type="text"
-                      name="zipCode"
-                      className="input-field w-full"
-                      value={formData.zipCode}
-                      onChange={handleInputChange}
-                      placeholder="10001"
-                    />
-                  </div>
+              )}
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="input-field w-full"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="john.doe@email.com"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number *</label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    className="input-field w-full"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <input
+                  type="text"
+                  name="address"
+                  className="input-field w-full"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  placeholder="123 Main Street"
+                />
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <input
+                    type="text"
+                    name="city"
+                    className="input-field w-full"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    placeholder="New York"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                  <input
+                    type="text"
+                    name="state"
+                    className="input-field w-full"
+                    value={formData.state}
+                    onChange={handleInputChange}
+                    placeholder="NY"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                  <input
+                    type="text"
+                    name="zipCode"
+                    className="input-field w-full"
+                    value={formData.zipCode}
+                    onChange={handleInputChange}
+                    placeholder="10001"
+                  />
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="flex justify-end space-x-3">
-              <button type="button" className="btn-secondary">
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Creating Customer...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Create Customer
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
+          <div className="flex justify-end space-x-3">
+            <button type="button" className="btn-secondary">Cancel</button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`btn-primary ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating Customer...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Create Customer
+                </>
+              )}
+            </button>
+          </div>
+        </form>
       </div>
-    );
-  }
-
-  // Customer Groups View  
-  if (currentView === 'customers-groups') {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Customer Groups</h1>
-            <p className="text-gray-600 mt-1">Organize and segment your customers</p>
-          </div>
-          <button className="btn-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Group
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">High-Value Customers</h3>
-            <p className="text-sm text-gray-500 mb-4">Customers with premium over $10,000</p>
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold text-blue-600">143</span>
-              <span className="text-sm text-gray-500">customers</span>
-            </div>
-          </div>
-          
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Corporate Clients</h3>
-            <p className="text-sm text-gray-500 mb-4">All business insurance customers</p>
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold text-purple-600">89</span>
-              <span className="text-sm text-gray-500">companies</span>
-            </div>
-          </div>
-          
-          <div className="card p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">New Customers</h3>
-            <p className="text-sm text-gray-500 mb-4">Joined in the last 30 days</p>
-            <div className="flex justify-between items-center">
-              <span className="text-2xl font-bold text-green-600">23</span>
-              <span className="text-sm text-gray-500">customers</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Default: All Customers View
-  const filteredCustomers = customers.filter(customer => 
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    </div>
   );
+}
+
+// Customer Groups Component
+function CustomerGroupsView() {
+  const [searchTerm, setSearchTerm] = useState('');
+  
+  const filteredGroups = useMemo(() => {
+    return mockGroups.filter(group => 
+      group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      group.description.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Customer Groups</h1>
+          <p className="text-gray-600 mt-1">Organize and segment your customers</p>
+        </div>
+        <button className="btn-primary">
+          <Plus className="h-4 w-4 mr-2" />
+          Create Group
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Groups</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{mockGroups.length}</p>
+            </div>
+            <Users className="h-8 w-8 text-blue-600" />
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Active Groups</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {mockGroups.filter(g => g.isActive).length}
+              </p>
+            </div>
+            <Star className="h-8 w-8 text-green-600" />
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Auto Groups</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {mockGroups.filter(g => g.type === 'auto').length}
+              </p>
+            </div>
+            <Building2 className="h-8 w-8 text-purple-600" />
+          </div>
+        </div>
+        <div className="stat-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Customers</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">
+                {mockGroups.reduce((sum, g) => sum + g.customerCount, 0).toLocaleString()}
+              </p>
+            </div>
+            <UserPlus className="h-8 w-8 text-yellow-600" />
+          </div>
+        </div>
+      </div>
+
+      <div className="card p-6">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search groups..."
+            className="input-field pl-10 w-full"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        {filteredGroups.map((group) => (
+          <div key={group.id} className="card p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                <p className="text-sm text-gray-500">{group.description}</p>
+              </div>
+              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                group.type === 'auto' 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-blue-100 text-blue-800'
+              }`}>
+                {group.type === 'auto' ? 'Auto' : 'Manual'}
+              </span>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-900">{group.customerCount}</p>
+                <p className="text-xs text-gray-500">Customers</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-900">
+                  ${(group.totalPremium / 1000).toFixed(0)}K
+                </p>
+                <p className="text-xs text-gray-500">Total Premium</p>
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-gray-900">
+                  ${group.avgPremium.toLocaleString()}
+                </p>
+                <p className="text-xs text-gray-500">Avg Premium</p>
+              </div>
+            </div>
+
+            {group.criteria && (
+              <div className="mb-4">
+                <p className="text-xs text-gray-500 mb-1">Criteria:</p>
+                <p className="text-sm text-gray-700 bg-gray-100 rounded p-2 font-mono">
+                  {group.criteria}
+                </p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="flex space-x-1">
+                {group.tags.map((tag, index) => (
+                  <span 
+                    key={index}
+                    className="inline-flex px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="text-gray-400 hover:text-blue-600">
+                  <Eye className="h-4 w-4" />
+                </button>
+                <button className="text-gray-400 hover:text-blue-600">
+                  <Edit className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// All Customers Component
+function AllCustomersView() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredCustomers = useMemo(() => {
+    return mockCustomers.filter(customer => 
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -414,10 +525,9 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900">All Customers</h1>
           <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
         </div>
         <div className="flex space-x-3">
@@ -432,13 +542,12 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
         </div>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="stat-card">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Customers</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{mockCustomers.length}</p>
             </div>
             <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
               <Users className="h-5 w-5 text-blue-600" />
@@ -451,7 +560,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Active Customers</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {customers.filter(c => c.status === 'Active').length}
+                {mockCustomers.filter(c => c.status === 'Active').length}
               </p>
             </div>
             <div className="h-10 w-10 bg-green-50 rounded-lg flex items-center justify-center">
@@ -465,7 +574,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Corporate Clients</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                {customers.filter(c => c.type === 'Corporate').length}
+                {mockCustomers.filter(c => c.type === 'Corporate').length}
               </p>
             </div>
             <div className="h-10 w-10 bg-purple-50 rounded-lg flex items-center justify-center">
@@ -479,7 +588,7 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
             <div>
               <p className="text-sm font-medium text-gray-600">Total Premium</p>
               <p className="text-2xl font-bold text-gray-900 mt-1">
-                ${customers.reduce((sum, c) => sum + c.premiumTotal, 0).toLocaleString()}
+                ${mockCustomers.reduce((sum, c) => sum + c.premiumTotal, 0).toLocaleString()}
               </p>
             </div>
             <div className="h-10 w-10 bg-yellow-50 rounded-lg flex items-center justify-center">
@@ -489,7 +598,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
         </div>
       </div>
 
-      {/* Search and Filters */}
       <div className="card p-6">
         <div className="flex items-center space-x-4">
           <div className="relative flex-1 max-w-md">
@@ -509,7 +617,6 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
         </div>
       </div>
 
-      {/* Customer Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -614,4 +721,18 @@ export default function CustomersModule({ currentView }: CustomersModuleProps) {
       </div>
     </div>
   );
+}
+
+// Main Component
+export default function CustomersModule({ currentView }: CustomersModuleProps) {
+  // Render the appropriate view based on currentView
+  switch (currentView) {
+    case 'customers-new':
+      return <AddNewCustomerView />;
+    case 'customers-groups':
+      return <CustomerGroupsView />;
+    case 'customers':
+    default:
+      return <AllCustomersView />;
+  }
 }
