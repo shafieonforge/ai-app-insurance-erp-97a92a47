@@ -1,12 +1,15 @@
+'use client';
+
+import { useState } from 'react';
+import LoginForm from './components/auth/LoginForm';
+import DashboardLayout from './dashboard/layout';
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Next.js App</h1>
-        <p className="text-xl text-gray-600">
-          Built with AI App Builder
-        </p>
-      </div>
-    </main>
-  );
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (!isAuthenticated) {
+    return <LoginForm />;
+  }
+
+  return <DashboardLayout />;
 }
