@@ -14,7 +14,8 @@ import {
   Edit,
   Eye,
   Trash2,
-  ArrowLeft
+  UserPlus,
+  UsersIcon
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -134,42 +135,42 @@ export default function CustomersPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center space-x-4">
-          <button 
-            onClick={() => router.push('/')}
-            className="p-2 hover:bg-gray-100 rounded-lg"
-          >
-            <ArrowLeft className="h-5 w-5 text-gray-600" />
-          </button>
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Customer Management</h1>
             <p className="text-gray-600 mt-1">Manage individual and corporate customers</p>
+          </div>
+          <div className="flex space-x-3">
+            <button 
+              onClick={() => router.push('/customers/groups')}
+              className="btn-secondary"
+            >
+              <UsersIcon className="h-4 w-4 mr-2" />
+              Customer Groups
+            </button>
+            <button className="btn-secondary">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </button>
+            <button 
+              onClick={() => router.push('/customers/new')}
+              className="btn-primary"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Customer
+            </button>
           </div>
         </div>
       </div>
 
       <div className="p-6 space-y-6">
-        {/* Action Bar */}
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-3">
-            <button className="btn-secondary">
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </button>
-          </div>
-          <button className="btn-primary">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Customer
-          </button>
-        </div>
-
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="stat-card">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Customers</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length}</p>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{customers.length.toLocaleString()}</p>
               </div>
               <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-blue-600" />
@@ -257,10 +258,12 @@ export default function CustomersPage() {
               </select>
             </div>
             
-            <button className="btn-secondary">
-              <Filter className="h-4 w-4 mr-2" />
-              More Filters
-            </button>
+            <div className="flex items-center space-x-2">
+              <button className="btn-secondary">
+                <Filter className="h-4 w-4 mr-2" />
+                More Filters
+              </button>
+            </div>
           </div>
         </div>
 

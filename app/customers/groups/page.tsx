@@ -82,19 +82,6 @@ const mockGroups: CustomerGroup[] = [
     createdDate: '2024-01-08',
     tags: ['age-group', 'manual'],
     isActive: true
-  },
-  {
-    id: 'GRP-005',
-    name: 'At-Risk Customers',
-    description: 'Customers with multiple claims or payment issues',
-    type: 'auto',
-    customerCount: 34,
-    totalPremium: 125000,
-    avgPremium: 3676,
-    createdDate: '2024-01-05',
-    criteria: 'Claims Count >= 3 OR Payment Delays >= 2',
-    tags: ['risk', 'attention'],
-    isActive: false
   }
 ];
 
@@ -103,30 +90,19 @@ export default function CustomerGroupsPage() {
   const [groups] = useState<CustomerGroup[]>(mockGroups);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'manual' | 'auto'>('all');
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
   const filteredGroups = groups.filter(group => {
     const matchesSearch = group.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         group.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         group.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                         group.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || group.type === filterType;
-    const matchesStatus = filterStatus === 'all' || 
-                         (filterStatus === 'active' && group.isActive) ||
-                         (filterStatus === 'inactive' && !group.isActive);
     
-    return matchesSearch && matchesType && matchesStatus;
+    return matchesSearch && matchesType;
   });
 
   const getTypeColor = (type: string) => {
     return type === 'auto' 
       ? 'bg-green-100 text-green-800' 
       : 'bg-blue-100 text-blue-800';
-  };
-
-  const getStatusColor = (isActive: boolean) => {
-    return isActive 
-      ? 'bg-green-100 text-green-800' 
-      : 'bg-red-100 text-red-800';
   };
 
   return (
@@ -156,16 +132,10 @@ export default function CustomerGroupsPage() {
               Advanced Filters
             </button>
           </div>
-          <div className="flex space-x-3">
-            <button className="btn-secondary">
-              <Users className="h-4 w-4 mr-2" />
-              Bulk Actions
-            </button>
-            <button className="btn-primary">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Group
-            </button>
-          </div>
+          <button className="btn-primary">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Group
+          </button>
         </div>
 
         {/* Stats Cards */}
@@ -249,16 +219,6 @@ export default function CustomerGroupsPage() {
                 <option value="auto">Auto Groups</option>
                 <option value="manual">Manual Groups</option>
               </select>
-              
-              <select
-                className="input-field"
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
-              >
-                <option value="all">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
             </div>
           </div>
         </div>
@@ -277,11 +237,9 @@ export default function CustomerGroupsPage() {
                     <p className="text-sm text-gray-500">{group.id}</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <button className="text-gray-400 hover:text-gray-600">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </button>
-                </div>
+                <button className="text-gray-400 hover:text-gray-600">
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
               </div>
 
               <p className="text-sm text-gray-600 mb-4">{group.description}</p>
@@ -290,9 +248,11 @@ export default function CustomerGroupsPage() {
                 <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getTypeColor(group.type)}`}>
                   {group.type === 'auto' ? 'Auto' : 'Manual'}
                 </span>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(group.isActive)}`}>
-                  {group.isActive ? 'Active' : 'Inactive'}
-                </span>
+                {group.isActive && (
+                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                    Active
+                  </span>
+                )}
               </div>
 
               {group.criteria && (
