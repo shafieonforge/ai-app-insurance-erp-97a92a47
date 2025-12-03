@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import LoginForm from './components/auth/LoginForm';
-import Dashboard from './components/dashboard/Dashboard';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function HomePage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
+  useEffect(() => {
+    // Redirect to customers page as the main landing page
+    router.push('/customers');
+  }, [router]);
 
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
-  }
-
-  return <Dashboard />;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+    </div>
+  );
 }
